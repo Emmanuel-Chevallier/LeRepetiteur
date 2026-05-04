@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - InterroPedago V6</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary: #475569;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-info: #0ea5e9;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        header p {
+            margin-top: 0.5rem;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+        }
+
+        nav.sidebar {
+            position: sticky;
+            top: 2rem;
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+            height: fit-content;
+            max-height: calc(100vh - 4rem);
+            overflow-y: auto;
+        }
+
+        nav.sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        nav.sidebar li {
+            margin-bottom: 0.5rem;
+        }
+
+        nav.sidebar a {
+            text-decoration: none;
+            color: var(--secondary);
+            font-weight: 500;
+            display: block;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        nav.sidebar a:hover {
+            background-color: #f1f5f9;
+            color: var(--primary);
+        }
+
+        main.content {
+            background: var(--surface);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        h2 {
+            color: var(--primary);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.5rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        h2:first-child {
+            margin-top: 0;
+        }
+
+        h3 {
+            color: var(--secondary);
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-card.info { border-left-color: var(--accent-info); }
+        .feature-card.success { border-left-color: var(--accent-success); }
+        .feature-card.warning { border-left-color: var(--accent-warning); }
+
+        code {
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #b91c1c;
+        }
+
+        pre code {
+            display: block;
+            padding: 1rem;
+            color: #333;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            nav.sidebar {
+                position: static;
+                max-height: none;
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>📖 Documentation InterroPedago V6</h1>
+        <p>Analyse approfondie et guide d'utilisation du système de génération et de correction assistées par IA.</p>
+    </header>
+
+    <div class="container">
+        <nav class="sidebar">
+            <h3 style="margin-top: 0;">Sommaire</h3>
+            <ul>
+                <li><a href="#architecture">1. Architecture Globale</a></li>
+                <li><a href="#etudiants">2. Gestion des Étudiants</a></li>
+                <li><a href="#cours">3. Gestion des Cours</a></li>
+                <li><a href="#banque">4. Banque de Questions</a></li>
+                <li><a href="#generation">5. Génération des Quizzes</a></li>
+                <li><a href="#correction">6. Correction Intelligente</a></li>
+                <li><a href="#suivi">7. Carnet de Notes & Synthèse</a></li>
+                <li><a href="#etudiant">8. Espace Étudiant & Chatbot</a></li>
+                <li><a href="#ui_guide">9. Guide de l'Interface (Boutons)</a></li>
+            </ul>
+            <hr style="margin:2rem 0; border:1px solid var(--border);">
+            <div style="text-align: center;">
+                <a href="/static/dev_doc.html" style="background:var(--primary); color:white; border-radius:4px; text-align:center;">👩‍💻 Documentation Dev</a>
+            </div>
+        </nav>
+
+        <main class="content">
+            
+            <section id="architecture">
+                <h2>1. Architecture Globale</h2>
+                <div class="feature-card">
+                    <p><strong>InterroPedago V6</strong> repose sur une architecture moderne de type client-serveur.</p>
+                    <ul>
+                        <li><strong>Backend</strong> : Développé en Python avec <code>FastAPI</code> pour exposer des API RESTful rapides et asynchrones.</li>
+                        <li><strong>Frontend</strong> : Composé de HTML/CSS/JS natif, sans framework lourd, garantissant une exécution rapide. Le rendu du LaTeX est assuré par <code>MathJax</code>.</li>
+                        <li><strong>Stockage de Données</strong> : Basé sur des fichiers JSON structurés dans le répertoire <code>data/</code>, permettant une portabilité maximale et un déploiement facile sans base de données externe.</li>
+                        <li><strong>Moteur IA</strong> : L'ensemble de l'intelligence artificielle (génération, correction, chatbot) s'appuie sur les modèles de langage <code>Google Gemini (gemini-3.1-pro-preview)</code>.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="etudiants">
+                <h2>2. Gestion des Étudiants</h2>
+                <p>Le système assure l'anonymat et la gestion simplifiée des cohortes.</p>
+                <div class="feature-card info">
+                    <h3>Fonctionnalités</h3>
+                    <ul>
+                        <li><strong>Anonymisation</strong> : Chaque étudiant est identifié en interne par un code unique à 4 chiffres (ex: <code>1234</code>). Sur les copies, seul ce numéro ("Candidate #1234") apparaît pour garantir un traitement impartial.</li>
+                        <li><strong>Importation CSV</strong> : Permet d'importer une liste d'étudiants (Nom, Prénom). Le système gère automatiquement les homonymes en ajoutant un suffixe (ex: "Dupont (2)").</li>
+                        <li><strong>Génération de mots de passe</strong> : Un clic permet de générer des mots de passe aléatoires de 6 caractères alphanumériques pour tous les étudiants n'en possédant pas.</li>
+                        <li><strong>Génération par lots</strong> : Utile pour des tests ou des inscriptions de masse, crée N comptes fictifs numérotés consécutivement.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="cours">
+                <h2>3. Gestion des Cours & Configuration</h2>
+                <p>La gestion des supports de cours est au cœur de la génération de quizzes.</p>
+                <div class="feature-card">
+                    <ul>
+                        <li><strong>Source LaTeX</strong> : L'enseignant téléverse le fichier source <code>.tex</code> de son cours complet.</li>
+                        <li><strong>Fenêtrage contextuel</strong> : Plutôt que de fournir l'intégralité du cours à l'IA pour chaque génération, l'enseignant définit un <span class="highlight">intervalle de lignes (Début / Fin)</span>. Cela permet de cibler précisément le dernier chapitre abordé en classe pour les évaluations continues.</li>
+                        <li><strong>Prévisualisation</strong> : Un outil intégré permet d'extraire et d'afficher le code LaTeX de l'intervalle sélectionné pour vérifier la portée du sujet.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="banque">
+                <h2>4. Génération de la Banque de Questions</h2>
+                <p>La V6 introduit le concept de "Banque de Questions" pour plus de contrôle pédagogique.</p>
+                <div class="feature-card success">
+                    <h3>Implémentation</h3>
+                    <p>À partir de l'intervalle de cours sélectionné (cf. Section 3), l'enseignant demande la génération de N questions.</p>
+                    <ol>
+                        <li>Le Backend envoie le segment LaTeX et le <em>Prompt de la Banque</em> à Gemini.</li>
+                        <li>Gemini retourne une liste brute d'items LaTeX.</li>
+                        <li>Le Backend parse ces questions et les affiche.</li>
+                        <li><strong>Boucle de Feedback</strong> : L'enseignant peut fournir des instructions supplémentaires dans un champ de commentaire. Le système renvoie alors à l'IA les questions actuelles + le commentaire + le cours, afin de raffiner les questions.</li>
+                        <li>Les questions finalisées cochées sont enregistrées et formeront le pool ("nouvelles questions") pour les quizzes.</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section id="generation">
+                <h2>5. Génération Personnalisée des Quizzes</h2>
+                <p>C'est l'atout majeur d'InterroPedago : <strong>des évaluations différenciées</strong> basées sur les lacunes individuelles.</p>
+                <div class="feature-card info">
+                    <h3>Algorithme de Génération</h3>
+                    <p>Lorsqu'un quiz est généré pour un étudiant, l'IA reçoit un prompt contenant :</p>
+                    <ul>
+                        <li><strong>Son Historique</strong> : La liste des questions posées lors des précédents quizzes de ce cours et les notes/feedbacks obtenus.</li>
+                        <li><strong>La Banque Sélectionnée</strong> : Les questions approuvées à l'étape précédente.</li>
+                        <li><strong>Le Cours</strong> : Le segment LaTeX de référence.</li>
+                    </ul>
+                    <p>La directive par défaut impose de piocher :<br>
+                    - <code>n_new</code> questions depuis la banque sélectionnée (évaluant le nouveau cours).<br>
+                    - <code>n_old</code> questions depuis l'historique de l'étudiant <strong>parmi celles qu'il a échouées</strong> (principe de répétition espacée et de remédiation).</p>
+                    
+                    <h3>Modes de génération</h3>
+                    <ul>
+                        <li><strong>Prochain Quiz (Tous)</strong> : Itère le compteur de quiz et génère un sujet PDF pour tous les étudiants inscrits au cours. À la fin, tous les PDFs sont concaténés en un seul document global (facile à imprimer).</li>
+                        <li><strong>Régénérer (Tous)</strong> : Écrase le dernier quiz généré si on souhaite changer un paramètre global.</li>
+                        <li><strong>Individuel</strong> : Permet de cibler un étudiant précis et un numéro de quiz spécifique pour re-générer son sujet indépendamment du reste de la classe.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="correction">
+                <h2>6. Correction Automatique (Smart Grading)</h2>
+                <p>La correction est entièrement automatisée grâce à l'analyse multimodale de Gemini.</p>
+                <div class="feature-card warning">
+                    <h3>Processus (V2)</h3>
+                    <ol>
+                        <li><strong>Upload Massif</strong> : L'enseignant scanne toutes les copies en un seul PDF (ou images). L'interface permet de diviser le PDF (ex: 2 pages par copie).</li>
+                        <li><strong>Identification (OCR)</strong> : Le système analyse l'en-tête de chaque copie pour identifier l'ID de l'étudiant, le cours, et le numéro de quiz. L'ID (Candidate #1234) est croisé avec la base de données.</li>
+                        <li><strong>Correction Contextuelle</strong> : Pour chaque copie identifiée, le système récupère en base le sujet précis qui avait été généré pour cet étudiant.</li>
+                        <li><strong>Évaluation IA</strong> : L'image de la copie étudiante ET le fichier PDF du sujet original sont envoyés à Gemini. Le modèle est instruit de lire les réponses manuscrites, de les comparer aux questions du sujet, d'attribuer une note pour chaque question, et de formuler un feedback pédagogique bilingue.</li>
+                        <li>Le résultat est structuré en JSON et enregistré dans le dossier de l'étudiant.</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section id="suivi">
+                <h2>7. Carnet de Notes, Présence & Synthèse</h2>
+                <div class="feature-card">
+                    <ul>
+                        <li><strong>Carnet de Notes</strong> : Extrait dynamiquement les données JSON de correction pour générer un tableau croisé Étudiants / Quizzes. Il inclut un graphique d'évolution (moyenne et écart-type) tracé avec <code>Plotly</code>. Les notes automatiques peuvent être modifiées manuellement (elles apparaissent alors en jaune).</li>
+                        <li><strong>Présence</strong> : Système classique d'appel avec date et heure, stocké par cours.</li>
+                        <li><strong>Synthèse Globale</strong> : Après une session d'évaluation, le système peut lire toutes les corrections d'un quiz et faire appel à l'IA pour générer un <em>Rapport Markdown</em>. Ce rapport résume la moyenne globale et identifie les points du cours les moins bien compris par l'ensemble de la classe, guidant l'enseignant sur les points à revoir.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="etudiant">
+                <h2>8. Espace Étudiant & Chatbot Tutoriel</h2>
+                <p>L'étudiant dispose de sa propre interface sur le portail <code>student_server</code>.</p>
+                <div class="feature-card success">
+                    <ul>
+                        <li><strong>Tableau de Bord</strong> : L'étudiant visualise ses cours et la liste de ses quizzes passés.</li>
+                        <li><strong>Correction Détaillée</strong> : Pour chaque quiz, l'étudiant accède au scan original de sa copie, au sujet généré pour lui (PDF), et au tableau de correction détaillé (note et feedback du correcteur IA par question).</li>
+                        <li><strong>Chatbot IA Pédagogique</strong> : Un assistant virtuel est intégré. Ce n'est pas un LLM générique : <strong>il a accès en temps réel à l'historique complet des évaluations de l'étudiant</strong>. Si l'étudiant pose une question sur le cours, le Chatbot peut y répondre en faisant le lien avec une erreur que l'étudiant a commise dans un de ses quizzes précédents, offrant un accompagnement extrêmement ciblé.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="ui_guide">
+                <h2>9. Guide Détaillé de l'Interface (Dictionnaire des Boutons)</h2>
+                <p>Ce niveau de description est destiné aux utilisateurs finaux (enseignants) pour comprendre le rôle précis de chaque élément interactif du tableau de bord.</p>
+                
+                <div class="feature-card">
+                    <h3>En-tête & Vues globales</h3>
+                    <ul>
+                        <li><span class="highlight">🚀 Déployer ▼</span> : Ouvre un menu déroulant permettant d'exporter les fichiers du backend vers le serveur distant de l'université (SFTP) ou de lancer des tests locaux.</li>
+                        <li><span class="highlight">👁️ Switch View</span> : Permet d'ouvrir rapidement l'interface Étudiant dans un nouvel onglet pour vérifier ce que voient les apprenants.</li>
+                        <li><span class="highlight">📖 Documentation</span> : Ouvre la présente page d'aide dans un nouvel onglet.</li>
+                    </ul>
+
+                    <h3>Section 0. Gestion des Étudiants</h3>
+                    <ul>
+                        <li><span class="highlight">Ajouter Étudiant</span> : Crée manuellement un profil étudiant en entrant un identifiant à 4 chiffres.</li>
+                        <li><span class="highlight">📁 Importer CSV</span> : Ouvre une fenêtre système pour sélectionner un fichier CSV. Le système lira les colonnes "Nom" et "Prénom" pour peupler la base de données.</li>
+                        <li><span class="highlight">🔑 Générer les Accès</span> : Attribue un mot de passe alphanumérique unique et sécurisé à chaque étudiant qui n'en possède pas encore.</li>
+                        <li><span class="highlight">Générer N Étudiants</span> : Outil de test/initialisation rapide pour créer une série de profils génériques (ex: de 2000 à 2030).</li>
+                        <li><span class="highlight">👁️ Montrer/Cacher les emails</span> : Affiche ou masque la colonne des adresses email dans le tableau principal pour des raisons de confidentialité.</li>
+                        <li><span class="highlight">👁️ Cours affichés ▼</span> : Menu déroulant pour sélectionner quelles colonnes de notes (de quels cours) afficher dans le grand tableau récapitulatif.</li>
+                        <li><span class="highlight">☑ Tout</span> / <span class="highlight">📋 Copier</span> : Permet de sélectionner rapidement tous les étudiants et de copier leurs adresses email dans le presse-papier pour un envoi groupé.</li>
+                        <li><span class="highlight">Inscrire / Désinscrire</span> : Boutons de couleur (Vert/Rouge) situés dans le tableau. Permettent d'ajouter ou retirer un étudiant du cours sélectionné.</li>
+                        <li><span class="highlight">✏️ (Éditer)</span> : Ouvre une fenêtre modale pour corriger le nom, prénom ou l'email d'un étudiant.</li>
+                        <li><span class="highlight">🗑️ (Supprimer)</span> : Supprime définitivement l'étudiant et toutes ses données associées (copies, notes).</li>
+                        <li><span class="highlight">👁️ Voir Historique</span> : Ouvre une fenêtre détaillée affichant les conversations Chatbot et les copies de l'étudiant.</li>
+                    </ul>
+
+                    <h3>Section 1. Gestion des Cours</h3>
+                    <ul>
+                        <li><span class="highlight">Créer</span> : Initialise un nouveau cours dans la base de données avec le titre fourni.</li>
+                    </ul>
+
+                    <h3>Configuration du Cours (Sections 1 & 2)</h3>
+                    <ul>
+                        <li><span class="highlight">Upload</span> : Téléverse le fichier source <code>.tex</code> contenant le contenu pédagogique du cours sélectionné.</li>
+                        <li><span class="highlight">👁️ Voir</span> : Affiche le code LaTeX complet du cours dans un encadré redimensionnable pour lecture.</li>
+                        <li><span class="highlight">👁️ Prévisualiser</span> : Affiche uniquement la portion du code LaTeX correspondant à l'intervalle défini par les champs "Ligne Début" et "Ligne Fin".</li>
+                    </ul>
+
+                    <h3>Section 3. Banque de Questions</h3>
+                    <ul>
+                        <li><span class="highlight">Valider</span> : Lance l'appel à l'IA (Gemini) pour générer le nombre de questions spécifié, en se basant sur l'intervalle de cours et le prompt défini.</li>
+                        <li><span class="highlight">🔄 Soumettre les commentaires</span> : Relaie vos remarques textuelles à l'IA pour qu'elle corrige, reformule ou adapte les questions qui viennent d'être générées.</li>
+                    </ul>
+
+                    <h3>Section 4. Génération des Quizzes</h3>
+                    <ul>
+                        <li><span class="highlight">🆕 Prochain Quiz (tous)</span> : Mode de génération standard. Incrémente le numéro de quiz et prépare les sujets pour toute la classe.</li>
+                        <li><span class="highlight">♻️ Régénérer dernier (tous)</span> : Mode de correction. Écrase le dernier quiz généré pour la classe entière (utile si vous avez modifié le prompt à la dernière minute).</li>
+                        <li><span class="highlight">👤 Individuel</span> : Mode de rattrapage. Affiche des menus déroulants pour sélectionner un étudiant spécifique et regénérer son sujet indépendamment.</li>
+                        <li><span class="highlight">💾 Sauvegarder</span> (Prompt) : Enregistre définitivement les modifications apportées au texte du prompt pour ce cours.</li>
+                        <li><span class="highlight">↺ Restaurer défaut</span> : Réinitialise la zone de texte avec le prompt originel programmé par les développeurs.</li>
+                        <li><span class="highlight">🚀 Lancer la Génération</span> : Déclenche le processus asynchrone : interroge l'IA pour chaque étudiant, compile les fichiers LaTeX individuels, puis génère le PDF global de la classe.</li>
+                    </ul>
+
+                    <h3>Section 5. Carnet de Notes & Présence</h3>
+                    <ul>
+                        <li><span class="highlight">Rafraîchir</span> : Force le rechargement du tableau des notes depuis les fichiers JSON, utile si une correction en arrière-plan vient de se terminer.</li>
+                        <li><span class="highlight">Ajouter une séance</span> : Insère une nouvelle colonne dans le tableau d'appel à la date et l'heure spécifiées.</li>
+                    </ul>
+
+                    <h3>Section Correction Automatique (Smart Grading)</h3>
+                    <ul>
+                        <li><span class="highlight">📁 Sélectionner des fichiers</span> : Ouvre l'explorateur de fichiers pour sélectionner vos scans (PDF ou Images). Le système divisera automatiquement les PDFs multi-pages selon le réglage "Pages par copie".</li>
+                        <li><span class="highlight">🚀 Lancer la Correction</span> : Envoie les copies en attente à l'IA pour lecture OCR, évaluation, et génération de feedback. Le bouton indique le nombre de copies prêtes <code>(X)</code>.</li>
+                        <li><span class="highlight">Voir</span> / <span class="highlight">Voir Questionnaire</span> : Permet de prévisualiser l'image scannée ou le PDF du sujet original avant de lancer la correction.</li>
+                        <li><span class="highlight">X (Rouge)</span> : Retire la copie de la file d'attente sans la corriger.</li>
+                    </ul>
+
+                    <h3>Section Synthèse Globale</h3>
+                    <ul>
+                        <li><span class="highlight">📝 Modifier le Prompt de Synthèse</span> : Ouvre le champ pour ajuster les instructions données à l'IA concernant la rédaction du rapport de classe.</li>
+                        <li><span class="highlight">Générer la Synthèse</span> : Analyse toutes les corrections du quiz sélectionné et produit un rapport Markdown identifiant les difficultés principales rencontrées par les étudiants.</li>
+                    </ul>
+
+                    <h3>Autres Boutons</h3>
+                    <ul>
+                        <li><span class="highlight">🗑️ Supprimer ce Cours</span> : Bouton de danger (rouge) situé en bas. Supprime de manière irréversible le cours et tous les fichiers associés (sujets, scans, notes).</li>
+                    </ul>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+</body>
+</html>

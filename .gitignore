@@ -1,0 +1,36 @@
+# Logs
+*.log
+teacher/teacher.pid
+student/student.pid
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+
+# Clés API (CRITIQUE)
+*Gemini_key
+
+# Données (Très important pour ne pas fuiter les infos des étudiants)
+teacher/data/courses/*
+!teacher/data/courses/.gitkeep
+teacher/data/global/*
+!teacher/data/global/.gitkeep
+teacher/data/students/*
+!teacher/data/students/.gitkeep
+teacher/data/temp/*
+!teacher/data/temp/.gitkeep
+
+student/data/courses/*
+!student/data/courses/.gitkeep
+student/data/global/*
+!student/data/global/.gitkeep
+student/data/students/*
+!student/data/students/.gitkeep
+student/data/temp/*
+!student/data/temp/.gitkeep
+
+# Exécutables ou zip de déploiement
+*.zip
+*.tar.gz

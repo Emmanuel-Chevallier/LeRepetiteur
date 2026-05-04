@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Répétiteur - Espace Étudiant</title>
+    <!-- Marked for Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- MathJax for LaTeX -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f3f4f6;
+        }
+
+        body {
+            font-family: system-ui, sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 0;
+            /* Changed for login view full height */
+        }
+
+        .container {
+            max-width: 95%;
+            /* Used to be 1000px */
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #1f2937;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        select,
+        input,
+        textarea {
+            padding: 0.5rem;
+            margin-right: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+        }
+
+        /* Resize Handle Customization */
+        #chatHistory::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        #chatHistory::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #chatHistory::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 6px;
+        }
+
+        #chatHistory::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Larger corner indicator for resize */
+        #chatHistory::-webkit-resizer {
+            background-color: #e5e7eb;
+            background-image: linear-gradient(135deg, transparent 50%, #2563eb 50%);
+            background-size: 12px 12px;
+            background-position: bottom right;
+            background-repeat: no-repeat;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- LOGIN VIEW -->
+    <div id="loginView"
+        style="display: flex; justify-content: center; align-items: center; height: 100vh; background: #e5e7eb;">
+        <div
+            style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 300px; text-align: center;">
+            <h2 style="color: #2563eb; margin-bottom: 1.5rem;">🎓 Le Répétiteur</h2>
+            <div style="margin-bottom: 1rem;">
+                <input type="text" id="loginId" placeholder="Identifiant (ex: 2042)"
+                    style="width: 100%; padding: 0.75rem; box-sizing: border-box; margin-bottom: 0.5rem; text-align: center;">
+                <input type="password" id="loginPass" placeholder="Mot de Passe"
+                    style="width: 100%; padding: 0.75rem; box-sizing: border-box; text-align: center;">
+            </div>
+            <button onclick="login()" class="btn" style="width: 100%; font-size: 1.1em;">Se Connecter</button>
+            <p id="loginError" style="color: red; font-size: 0.9em; margin-top: 1rem; display: none;"></p>
+        </div>
+    </div>
+
+    <!-- STUDENT DASHBOARD (Initially Hidden) -->
+    <div id="dashboardView" class="container" style="display: none;">
+        <header>
+            <h1>🎓 Espace Étudiant</h1>
+            <div style="display:flex; align-items:center; gap:1rem;">
+                <span id="userNameDisplay" style="font-weight:bold; color:#555;"></span>
+                <button onclick="logout()" class="btn" style="background: #9ca3af;">Déconnexion</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Welcome Info -->
+            <div class="section" style="background: #eff6ff; border-color: #bfdbfe;">
+                <h2 id="welcomeMsg" style="margin-top:0;">Bonjour !</h2>
+                <div style="display:flex; gap:1rem; align-items:center;">
+                    <label><strong>Cours :</strong></label>
+                    <select id="courseSelect" onchange="loadQuizzes()">
+                        <option value="">-- Choisir un cours --</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Quiz List -->
+            <div id="quizListSection" class="section" style="display:none;">
+                <h3>📑 Mes Interrogations</h3>
+                <div id="quizList" style="display:flex; gap:0.5rem; overflow-x:auto; padding-bottom:1rem;">
+                    <!-- Quiz Buttons -->
+                </div>
+            </div>
+
+            <!-- Quiz Viewer -->
+            <div id="quizViewer" class="section" style="display:none;">
+                <h3 id="viewerTitle">Détail du Quiz</h3>
+                <!-- Vertical Layout Refactor -->
+                <div style="display:flex; flex-direction:column; gap:2rem;">
+                    <!-- Scan/Subject Toggle -->
+                    <div style="display:flex; justify-content:center; gap:1rem; margin-bottom:0.5rem;">
+                        <button id="btnViewScan" class="btn" onclick="switchViewer('scan')"
+                            style="background:#2563eb;">Voir ma Copie</button>
+                        <button id="btnViewSubject" class="btn" onclick="switchViewer('subject')"
+                            style="background:#6b7280;">Voir le Sujet</button>
+                    </div>
+
+                    <!-- Viewer (Top) -->
+                    <div style="width:100%; height:1200px; border:1px solid #ccc; background:#000; position:relative;">
+                        <iframe id="scanViewer" style="width:100%; height:100%; border:none;"></iframe>
+                    </div>
+
+                    <!-- Feedback (Middle) -->
+                    <div id="feedbackBox"
+                        style="border:1px solid #ccc; background:#fff; padding:1rem; border-radius:4px; max-height: 1000px; min-height: 400px; overflow-y:auto;">
+                        <i>Sélectionnez un quiz pour voir la correction.</i>
+                    </div>
+
+                    <!-- Chatbot (Bottom) -->
+                    <div
+                        style="display:flex; flex-direction:column; border:1px solid #e5e7eb; border-radius:4px; overflow:hidden;">
+                        <div
+                            style="background:#f3f4f6; padding:0.5rem; font-weight:bold; border-bottom:1px solid #e5e7eb;">
+                            🤖 Tuteur IA
+                        </div>
+                        <div id="chatHistory"
+                            style="height:400px; min-height:200px; resize:vertical; overflow:auto; padding:1rem; background:white;">
+                            <div style="color:#9ca3af; font-style:italic;">Posez une question sur ce quiz...</div>
+                        </div>
+                        <div style="display:flex; border-top:1px solid #e5e7eb;">
+                            <textarea id="chatInput" placeholder="Posez votre question..."
+                                style="flex:1; border:none; padding:0.5rem; resize:none;"></textarea>
+                            <button onclick="sendChat()"
+                                style="border:none; background:#2563eb; color:white; padding:0 1rem; cursor:pointer;">➤</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // State
+        let currentUser = null;
+        let currentCourse = null;
+        let currentQuiz = null;
+
+        // --- AUTH ---
+        async function login() {
+            const id = document.getElementById('loginId').value;
+            const pass = document.getElementById('loginPass').value;
+            const err = document.getElementById('loginError');
+
+            if (!id || !pass) {
+                err.innerText = "Veuillez remplir tous les champs.";
+                err.style.display = 'block';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, password: pass })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    currentUser = data.student; // { id: "...", name: "..." }
+                    showDashboard();
+                } else {
+                    const errorData = await res.json();
+                    err.innerText = errorData.detail || "Identifiant ou mot de passe incorrect.";
+                    err.style.display = 'block';
+                }
+            } catch (e) {
+                console.error(e);
+                err.innerText = "Erreur de connexion serveur (" + e.message + "). Vérifiez que le serveur est lancé (Port 8002).";
+                err.style.display = 'block';
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('dashboardView').style.display = 'none';
+            document.getElementById('loginView').style.display = 'flex';
+            document.getElementById('loginId').value = '';
+            document.getElementById('loginPass').value = '';
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        function showDashboard() {
+            document.getElementById('loginView').style.display = 'none';
+            document.getElementById('dashboardView').style.display = 'block';
+
+            // Clean up name (remove "Candidate #")
+            let displayName = currentUser.name;
+            if (displayName.startsWith("Candidate #")) displayName = "Étudiant " + currentUser.id;
+
+            document.getElementById('welcomeMsg').innerText = `Bonjour !`;
+            document.getElementById('userNameDisplay').innerText = `👤 ${displayName}`;
+            loadCourses();
+        }
+
+        // --- DATA LOADING ---
+        async function loadCourses() {
+            try {
+                const courses = await (await fetch('/api/courses')).json();
+                const select = document.getElementById('courseSelect');
+                select.innerHTML = '<option value="">-- Choisir un cours --</option>';
+
+                // Filter enrolled courses
+                const myCourses = courses.filter(c => c.enrolled_students && c.enrolled_students.includes(currentUser.id));
+
+                myCourses.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.innerText = c.title;
+                    select.appendChild(opt);
+                });
+
+                if (myCourses.length === 0) {
+                    select.innerHTML += '<option disabled>(Aucun cours inscrit)</option>';
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadQuizzes() {
+            const cid = document.getElementById('courseSelect').value;
+            currentCourse = cid;
+            const listDiv = document.getElementById('quizList');
+            const section = document.getElementById('quizListSection');
+            const viewer = document.getElementById('quizViewer');
+
+            viewer.style.display = 'none';
+            if (!cid) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            listDiv.innerHTML = "Chargement...";
+
+            try {
+                const res = await fetch(`/api/students/${currentUser.id}/courses/${cid}/quizzes`);
+                const quizzes = await res.json();
+                listDiv.innerHTML = '';
+
+                if (quizzes.length === 0) {
+                    listDiv.innerHTML = "<i>Aucune correction disponible.</i>";
+                    return;
+                }
+
+                quizzes.forEach(q => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn';
+                    btn.style.background = '#4b5563';
+                    btn.style.minWidth = '120px';
+
+                    let scoreText = "?/20";
+                    if (q.correction && (q.correction.effective_score !== undefined || q.correction.total_score !== undefined)) {
+                        let finalScore = q.correction.effective_score !== undefined ? q.correction.effective_score : q.correction.total_score;
+                        if (finalScore != q.correction.total_score) {
+                            scoreText = `${finalScore}<span style="font-size:0.8em; color:#d1d5db;">(${q.correction.total_score})</span>/20`;
+                        } else {
+                            scoreText = finalScore + "/20";
+                        }
+                        // Color coding
+                        if (finalScore >= 10) btn.style.background = '#059669'; // Green
+                        else btn.style.background = '#d97706'; // Orange
+                    }
+
+                    btn.innerHTML = `<strong>Quiz #${q.quiz_number}</strong><br><span style="font-size:1.2em">${scoreText}</span>`;
+
+                    btn.onclick = () => loadQuizDetail(q);
+                    listDiv.appendChild(btn);
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        function switchViewer(mode) {
+            const iframe = document.getElementById('scanViewer');
+            const btnScan = document.getElementById('btnViewScan');
+            const btnSubj = document.getElementById('btnViewSubject');
+
+            if (mode === 'scan') {
+                if (currentQuiz.scan_url) {
+                    iframe.src = currentQuiz.scan_url;
+                    btnScan.style.background = '#2563eb'; // Blue
+                    btnSubj.style.background = '#6b7280'; // Gray
+                } else {
+                    alert("Copie non disponible.");
+                }
+            } else {
+                if (currentQuiz.subject_url) {
+                    iframe.src = currentQuiz.subject_url;
+                    btnScan.style.background = '#6b7280'; // Gray
+                    btnSubj.style.background = '#2563eb'; // Blue
+                } else {
+                    alert("Sujet non disponible.");
+                }
+            }
+        }
+
+        function loadQuizDetail(quiz) {
+            currentQuiz = quiz;
+            const viewer = document.getElementById('quizViewer');
+            viewer.style.display = 'block';
+            document.getElementById('viewerTitle').innerText = `Correction Quiz #${quiz.quiz_number}`;
+
+            // 1. Setup Viewer Default
+            // Prefer Scan, fallback to Subject
+            if (quiz.scan_url) {
+                switchViewer('scan');
+            } else if (quiz.subject_url) {
+                switchViewer('subject');
+            } else {
+                document.getElementById('scanViewer').src = "about:blank";
+            }
+
+            // Disable buttons if content missing
+            document.getElementById('btnViewScan').disabled = !quiz.scan_url;
+            document.getElementById('btnViewScan').style.opacity = quiz.scan_url ? 1 : 0.5;
+
+            document.getElementById('btnViewSubject').disabled = !quiz.subject_url;
+            document.getElementById('btnViewSubject').style.opacity = quiz.subject_url ? 1 : 0.5;
+
+            // 2. Feedback
+            const feedbackBox = document.getElementById('feedbackBox');
+            if (quiz.correction) {
+                // Render nicely
+                let finalScore = quiz.correction.effective_score !== undefined ? quiz.correction.effective_score : quiz.correction.total_score;
+                let scoreDisplay = finalScore == quiz.correction.total_score 
+                    ? `<span style="color:#2563eb">${quiz.correction.total_score}/20</span>`
+                    : `<span style="color:#059669">${finalScore}</span><span style="font-size:0.8em; color:#6b7280;">(${quiz.correction.total_score})</span><span style="color:#059669">/20</span>`;
+                let html = `<h3>Note : ${scoreDisplay}</h3>`;
+
+                // Grades detail
+                if (quiz.correction.grades) {
+                    quiz.correction.grades.forEach(g => {
+                        let questionHtml = "";
+                        if (g.question_text) {
+                            questionHtml = `
+                            <div style="font-size:1.1em; margin-bottom:0.5rem; padding:0.5rem; border-left:3px solid #ccc;">
+                                <strong>Question :</strong> ${marked.parse(g.question_text)}
+                            </div>`;
+                        }
+
+                        let transcriptionHtml = "";
+                        if (g.transcription) {
+                            transcriptionHtml = `
+                            <div style="font-size:1.1em; margin-bottom:0.5rem; padding:0.5rem; border-left:3px solid #ccc; font-style:italic;">
+                                <strong>Votre Réponse :</strong> "${g.transcription}"
+                            </div>`;
+                        } else if (quiz.correction.transcription && g.question_number === 1) {
+                            // Fallback
+                        }
+
+                        html += `
+                        <div style="margin-bottom:1.5rem; border-bottom:1px solid #eee; padding-bottom:1rem;">
+                            <strong>Question ${g.question_number}</strong> <span style="font-size:0.9em; color:#666;">(${g.score} pts)</span><br>
+                            ${questionHtml}
+                            ${transcriptionHtml}
+                            <div style="font-size:1.1em; margin-top:0.5rem; padding:0.5rem;">
+                                <strong>Feedback :</strong><br>
+                                ${marked.parse(g.feedback || "")}
+                            </div>
+                        </div>`;
+                    });
+                }
+
+                feedbackBox.innerHTML = html;
+
+                // Render MathJax
+                if (window.MathJax) {
+                    window.MathJax.typesetPromise([feedbackBox]);
+                }
+            } else {
+                feedbackBox.innerHTML = "Correction en cours...";
+            }
+
+            // 3. Reset Chat
+            document.getElementById('chatHistory').innerHTML = '<div style="color:#9ca3af; font-style:italic;">Posez une question sur ce quiz...</div>';
+        }
+
+        // --- CHATBOT ---
+        async function sendChat() {
+            const input = document.getElementById('chatInput');
+            const historyDiv = document.getElementById('chatHistory');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            // User Message
+            historyDiv.innerHTML += `<div style="text-align:right; margin:0.5rem 0;"><span style="background:#2563eb; color:white; padding:0.5rem 1rem; border-radius:15px 15px 0 15px; display:inline-block;">${msg}</span></div>`;
+            input.value = '';
+
+            // Bot Placeholder
+            const botMsgParams = {
+                id: 'msg-' + Date.now(),
+                content: ''
+            };
+            const botBubble = document.createElement('div');
+            botBubble.style.textAlign = 'left';
+            botBubble.style.margin = '0.5rem 0';
+            botBubble.innerHTML = `<span id="${botMsgParams.id}" style="background:#f3f4f6; color:#1f2937; padding:0.5rem 1rem; border-radius:15px 15px 15px 0; display:inline-block;">...</span>`;
+            historyDiv.appendChild(botBubble);
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+
+            const span = document.getElementById(botMsgParams.id);
+
+            try {
+                // Build history context if needed (simplified)
+                const payload = {
+                    student_id: currentUser.id,
+                    course_id: currentCourse,
+                    message: msg,
+                    history: []
+                };
+
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullText = "";
+                span.innerText = "";
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value);
+                    fullText += chunk;
+                    span.innerHTML = marked.parse(fullText);
+                    historyDiv.scrollTop = historyDiv.scrollHeight;
+                }
+
+                // Final render for MathJax
+                if (window.MathJax) {
+                    window.MathJax.typesetPromise([span]);
+                }
+
+            } catch (e) {
+                span.innerText = "Erreur de connexion.";
+            }
+        }
+
+        // --- ENTER KEY HANDLER ---
+        document.getElementById('chatInput').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Prevent newline
+                sendChat();
+            }
+        });
+    </script>
+</body>
+
+</html>

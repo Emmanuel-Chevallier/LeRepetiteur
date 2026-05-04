@@ -1,0 +1,2 @@
+Answer 1: The derivative of x^2 is 2x.
+Answer 2: I don't know.

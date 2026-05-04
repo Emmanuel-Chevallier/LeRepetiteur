@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historique Étudiant</title>
+    <!-- Marked for Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- MathJax for LaTeX -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f3f4f6;
+        }
+
+        body {
+            font-family: system-ui, sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 95%;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 1rem;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #1f2937;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        #quizList {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+
+        #viewerContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .iframe-container {
+            width: 100%;
+            height: 1200px;
+            border: 1px solid #ccc;
+            background: #000;
+        }
+
+        .feedback-container {
+            border: 1px solid #ccc;
+            background: #fff;
+            padding: 1rem;
+            border-radius: 4px;
+            max-height: 1000px;
+            min-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            padding: 2rem;
+            border: 1px solid #888;
+            border-radius: 8px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>📂 Historique de l'Étudiant</h1>
+            <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+                <h3 style="margin: 0; color: #4b5563;" id="studentIdDisplay">Étudiant ID: Chargement...</h3>
+            </div>
+        </header>
+
+        <main>
+            <!-- Quiz List -->
+            <div id="quizListSection" class="section" style="display:none;">
+                <h3>📑 Interrogations Passées</h3>
+                <div id="allCoursesContainer">
+                    <!-- Courses and their quizzes will go here -->
+                </div>
+            </div>
+
+            <!-- Quiz Viewer -->
+            <div id="quizViewer" class="section" style="display:none;">
+                <h3 id="viewerTitle" style="color:#2563eb;">Détail du Quiz</h3>
+
+                <div id="viewerContainer">
+                    <!-- Viewer Toggle -->
+                    <div style="display:flex; justify-content:center; gap:1rem; margin-bottom:0.5rem;">
+                        <button id="btnViewScan" class="btn" onclick="switchViewer('scan')"
+                            style="background:#2563eb;">Voir la Copie</button>
+                        <button id="btnViewSubject" class="btn" onclick="switchViewer('subject')"
+                            style="background:#6b7280;">Voir le Sujet</button>
+                    </div>
+
+                    <!-- Viewer (Top) -->
+                    <div class="iframe-container">
+                        <iframe id="scanViewer" style="width:100%; height:100%; border:none;"></iframe>
+                    </div>
+
+                    <!-- Feedback (Bottom) -->
+                    <div id="feedbackBox" class="feedback-container">
+                        <i>Sélectionnez un quiz pour voir la correction.</i>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loadingMessage" style="text-align:center; padding: 2rem; color: #6b7280; font-size: 1.2rem;">
+                Chargement de l'historique...
+            </div>
+            <div id="errorMessage"
+                style="display:none; text-align:center; padding: 2rem; color: #dc2626; font-size: 1.2rem; background: #fee2e2; border-radius: 8px;">
+            </div>
+        </main>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color:#dc2626;">Confirmer la modification</h3>
+            <p id="confirmModalText" style="font-size: 1.1em; color: #374151;">Voulez-vous vraiment enregistrer la note ?</p>
+            <div style="display:flex; justify-content:center; gap:1rem; margin-top:1.5rem;">
+                <button class="btn" style="background:#6b7280;" onclick="document.getElementById('confirmModal').style.display='none'">Annuler</button>
+                <button class="btn" style="background:#2563eb;" id="confirmModalBtnOk">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let studentId = null;
+        let currentQuiz = null;
+        let currentCourseId = null;
+        let targetCourseId = null;
+        let targetQuizNum = null;
+
+        // On Load
+        window.onload = () => {
+            // Extract parameters from URL
+            const params = new URLSearchParams(window.location.search);
+            studentId = params.get('student_id');
+            targetCourseId = params.get('course_id');
+            targetQuizNum = params.get('quiz');
+
+            if (!studentId) {
+                showError("Paramètre étudiant manquant dans l'URL. (student_id)");
+                return;
+            }
+
+            document.getElementById('studentIdDisplay').innerText = `Étudiant ID: ${studentId}`;
+
+            // Start the loading process
+            loadAllHistory();
+        };
+
+        async function loadAllHistory() {
+            try {
+                // 1. Fetch available courses
+                const res = await fetch('/api/courses');
+                if (!res.ok) throw new Error("Erreur réseau (courses)");
+                const courses = await res.json();
+
+                if (courses.length === 0) {
+                    document.getElementById('loadingMessage').style.display = 'none';
+                    const listDiv = document.getElementById('allCoursesContainer');
+                    document.getElementById('quizListSection').style.display = 'block';
+                    listDiv.innerHTML = "<i>Aucun cours disponible sur la plateforme.</i>";
+                    return;
+                }
+
+                document.getElementById('loadingMessage').innerHTML = 'Chargement des données pour chaque cours...';
+
+                const allCoursesContainer = document.getElementById('allCoursesContainer');
+                allCoursesContainer.innerHTML = '';
+
+                let hasAnyData = false;
+
+                // 2. Fetch quizzes for each course
+                for (let course of courses) {
+                    try {
+                        const qRes = await fetch(`/api/students/${studentId}/courses/${course.id}/quizzes`);
+                        if (!qRes.ok) continue; // skip if error for specific course
+
+                        const quizzes = await qRes.json();
+
+                        if (quizzes.length > 0) {
+                            hasAnyData = true;
+                            // Build a section for this course
+                            const courseBlock = document.createElement('div');
+                            courseBlock.style.marginBottom = '2rem';
+                            courseBlock.style.borderBottom = '1px solid #e5e7eb';
+                            courseBlock.style.paddingBottom = '1rem';
+
+                            const courseTitle = document.createElement('h4');
+                            courseTitle.style.color = '#374151';
+                            courseTitle.style.marginTop = '0';
+                            courseTitle.innerText = `Cours : ${course.title || course.id}`;
+
+                            const flexContainer = document.createElement('div');
+                            flexContainer.style.display = 'flex';
+                            flexContainer.style.gap = '0.5rem';
+                            flexContainer.style.overflowX = 'auto';
+                            flexContainer.style.paddingBottom = '0.5rem';
+
+                            quizzes.forEach(q => {
+                                const btn = document.createElement('button');
+                                btn.className = 'btn';
+                                btn.style.background = '#4b5563';
+                                btn.style.minWidth = '120px';
+
+                                let scoreText = "?/20";
+                                if (q.correction && (q.correction.total_score !== undefined || q.correction.effective_score !== undefined)) {
+                                    let effectiveScore = q.correction.effective_score !== undefined ? q.correction.effective_score : q.correction.total_score;
+                                    if (effectiveScore != q.correction.total_score) {
+                                        scoreText = `${effectiveScore}<span style="font-size:0.8em; color:#d1d5db;">(${q.correction.total_score})</span>/20`;
+                                    } else {
+                                        scoreText = effectiveScore + "/20";
+                                    }
+                                    if (effectiveScore >= 10) btn.style.background = '#059669'; // Green
+                                    else btn.style.background = '#d97706'; // Orange
+                                }
+
+                                btn.innerHTML = `<strong>Quiz #${q.quiz_number}</strong><br><span style="font-size:1.2em">${scoreText}</span>`;
+
+                                btn.onclick = () => loadQuizDetail(q, course);
+                                flexContainer.appendChild(btn);
+
+                                if (targetCourseId === course.id && targetQuizNum == q.quiz_number) {
+                                    setTimeout(() => btn.click(), 100);
+                                }
+                            });
+
+                            courseBlock.appendChild(courseTitle);
+                            courseBlock.appendChild(flexContainer);
+                            allCoursesContainer.appendChild(courseBlock);
+                        }
+                    } catch (e) {
+                        console.warn(`Could not load quizzes for course ${course.id}:`, e);
+                    }
+                }
+
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('quizListSection').style.display = 'block';
+
+                if (!hasAnyData) {
+                    allCoursesContainer.innerHTML = "<i>Aucune correction ou historique disponible pour cet étudiant dans tous les cours.</i>";
+                }
+
+            } catch (e) {
+                console.error(e);
+                showError("Erreur globale lors du chargement de l'historique : " + e.message);
+            }
+        }
+
+        function requestManualGradeUpdate(cid, sid, qnum) {
+            const input = document.getElementById('manualScoreInput');
+            const newScore = parseFloat(input.value);
+            if (isNaN(newScore) || newScore < 0 || newScore > 20) {
+                alert("Veuillez entrer une note valide entre 0 et 20.");
+                return;
+            }
+            
+            document.getElementById('confirmModalText').innerHTML = `Voulez-vous vraiment enregistrer la note de <strong>${newScore}/20</strong> pour ce quiz ?`;
+            document.getElementById('confirmModal').style.display = 'flex';
+            
+            document.getElementById('confirmModalBtnOk').onclick = () => {
+                document.getElementById('confirmModal').style.display = 'none';
+                executeManualGradeUpdate(cid, sid, qnum, newScore);
+            };
+        }
+
+        async function executeManualGradeUpdate(cid, sid, qnum, newScore) {
+            try {
+                const res = await fetch(`/api/courses/${cid}/grades`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        student_id: sid,
+                        quiz_number: qnum,
+                        score: newScore
+                    })
+                });
+                if (res.ok) {
+                    // Replace alert with nice visual feedback if possible, or just alert and reload
+                    location.reload();
+                } else {
+                    alert("Erreur lors de la sauvegarde.");
+                }
+            } catch (e) {
+                alert("Erreur réseau : " + e.message);
+            }
+        }
+
+        function switchViewer(mode) {
+            const iframe = document.getElementById('scanViewer');
+            const container = document.querySelector('.iframe-container');
+            const btnScan = document.getElementById('btnViewScan');
+            const btnSubj = document.getElementById('btnViewSubject');
+            
+            container.style.display = 'block';
+
+            if (mode === 'scan') {
+                if (currentQuiz.scan_url) {
+                    iframe.src = currentQuiz.scan_url;
+                    btnScan.style.background = '#2563eb'; // Blue
+                    btnSubj.style.background = '#6b7280'; // Gray
+                } else {
+                    alert("Copie non disponible.");
+                }
+            } else {
+                if (currentQuiz.subject_url) {
+                    iframe.src = currentQuiz.subject_url;
+                    btnScan.style.background = '#6b7280'; // Gray
+                    btnSubj.style.background = '#2563eb'; // Blue
+                } else {
+                    alert("Sujet non disponible.");
+                }
+            }
+        }
+
+        function loadQuizDetail(quiz, course) {
+            currentQuiz = quiz;
+            const viewer = document.getElementById('quizViewer');
+            viewer.style.display = 'block';
+            document.getElementById('viewerTitle').innerHTML = `Correction Quiz #${quiz.quiz_number} <span style="font-size:0.8em; color:#6b7280; margin-left:1rem;">(Cours : ${course.title || course.id})</span>`;
+
+            // 1. Setup Viewer Default
+            // Do not load PDF automatically to save bandwidth and screen real estate
+            document.getElementById('scanViewer').src = "about:blank";
+            document.querySelector('.iframe-container').style.display = 'none';
+            document.getElementById('btnViewScan').style.background = '#6b7280'; // Gray
+            document.getElementById('btnViewSubject').style.background = '#6b7280'; // Gray
+
+            // Disable buttons if content missing
+            document.getElementById('btnViewScan').disabled = !quiz.scan_url;
+            document.getElementById('btnViewScan').style.opacity = quiz.scan_url ? 1 : 0.5;
+
+            document.getElementById('btnViewSubject').disabled = !quiz.subject_url;
+            document.getElementById('btnViewSubject').style.opacity = quiz.subject_url ? 1 : 0.5;
+
+            // 2. Feedback
+            const feedbackBox = document.getElementById('feedbackBox');
+            if (quiz.correction) {
+                const effectiveScore = quiz.correction.effective_score !== undefined ? quiz.correction.effective_score : quiz.correction.total_score;
+                
+                let scoreDisplay = effectiveScore == quiz.correction.total_score 
+                    ? `<span style="color:#2563eb">${quiz.correction.total_score}/20</span>`
+                    : `<span style="color:#059669">${effectiveScore}</span><span style="font-size:0.8em; color:#6b7280;">(${quiz.correction.total_score})</span><span style="color:#059669">/20</span>`;
+
+                // Render nicely
+                let html = `
+                <div style="display:flex; justify-content:flex-start; gap: 2rem; align-items:center; border-bottom:2px solid #eee; padding-bottom:0.5rem; margin-bottom:1rem;">
+                    <h3 style="margin:0;">Note : ${scoreDisplay}</h3>
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                        <input type="number" id="manualScoreInput" step="0.25" min="0" max="20" value="${effectiveScore}" style="width:80px; padding:0.4rem; font-size:1rem; border:1px solid #ccc; border-radius:4px;">
+                        <button class="btn" style="background:#2563eb; padding:0.4rem 1rem; font-size:1rem;" onclick="requestManualGradeUpdate('${course.id}', '${studentId}', ${quiz.quiz_number})">Modifier la note</button>
+                    </div>
+                </div>`;
+
+                // Grades detail
+                if (quiz.correction.grades) {
+                    quiz.correction.grades.forEach(g => {
+                        let questionHtml = "";
+                        if (g.question_text) {
+                            questionHtml = `
+                            <div style="font-size:1.1em; margin-bottom:0.5rem; padding:0.5rem; border-left:3px solid #ccc;">
+                                <strong>Question :</strong> ${marked.parse(g.question_text)}
+                            </div>`;
+                        }
+
+                        let transcriptionHtml = "";
+                        if (g.transcription) {
+                            transcriptionHtml = `
+                            <div style="font-size:1.1em; margin-bottom:0.5rem; padding:0.5rem; border-left:3px solid #ccc; font-style:italic;">
+                                <strong>Réponse de l'étudiant :</strong> "${g.transcription}"
+                            </div>`;
+                        }
+
+                        html += `
+                        <div style="margin-bottom:1.5rem; border-bottom:1px solid #eee; padding-bottom:1rem; background:#f9fafb; padding: 1rem; border-radius: 8px;">
+                            <strong style="color:#4b5563;">Question ${g.question_number}</strong> <span style="font-size:0.95em; color:#059669; font-weight:bold; margin-left:10px;">(${g.score} pts)</span><br>
+                            ${questionHtml}
+                            ${transcriptionHtml}
+                            <div style="font-size:1.1em; margin-top:1rem; padding:0.75rem; background:#e0e7ff; border-radius:4px; border-left: 4px solid #4f46e5;">
+                                <strong style="color:#3730a3;">Feedback :</strong><br>
+                                <div style="color:#111827;">${marked.parse(g.feedback || "")}</div>
+                            </div>
+                        </div>`;
+                    });
+                }
+
+                feedbackBox.innerHTML = html;
+
+                // Render MathJax
+                if (window.MathJax) {
+                    window.MathJax.typesetPromise([feedbackBox]);
+                }
+            } else {
+                feedbackBox.innerHTML = "Correction en cours ou non disponible...";
+            }
+        }
+    </script>
+</body>
+
+</html>

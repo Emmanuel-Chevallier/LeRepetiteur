@@ -1,0 +1,3214 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Répétiteur V1</title>
+    <!-- Marked for Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- MathJax for LaTeX -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Plotly for Gradebook Graph with error bars -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js" charset="utf-8"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f3f4f6;
+        }
+
+        body {
+            font-family: system-ui, sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 95%;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #1f2937;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        select,
+        input,
+        textarea {
+            padding: 0.5rem;
+            margin-right: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+        }
+
+        .modified-grade {
+            background-color: #fef08a !important;
+            /* Yellow */
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f3f4f6;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9fafb;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 50;
+            border-radius: 4px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .dropdown-content a,
+        .dropdown-content label {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover,
+        .dropdown-content label:hover {
+            background-color: #f1f1f1;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Course List Styles */
+        .course-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .course-item {
+            padding: 1rem;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .course-item:hover {
+            border-color: #cbd5e1;
+            background: #f1f5f9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .course-item.active {
+            border-color: var(--primary);
+            background: #eff6ff;
+            box-shadow: 0 0 0 1px var(--primary);
+        }
+
+        .course-item .course-title {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 1.1em;
+        }
+
+        .course-item .course-id {
+            font-size: 0.95em;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body style="font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin: 0; padding: 20px;">
+    <!-- DEBUG BANNER -->
+
+    <div class="container">
+        <header>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h1>🎓 Le Répétiteur - Enseignant (V1)</h1>
+                <div style="display:flex; gap:1rem; align-items:center;">
+                    <a href="/static/doc.html" target="_blank" class="btn" style="background:#10b981; text-decoration:none;">📖 Documentation</a>
+                    <div class="dropdown">
+                        <button class="btn" style="background:#7c3aed;">🚀 Déployer ▼</button>
+                        <div class="dropdown-content">
+                            <a href="javascript:void(0)" onclick="deployToUniversity('sftp')">☁️ Serveur Université
+                                (SFTP)</a>
+                            <hr style="margin:0; border:0; border-top:1px solid #eee;">
+                            <a href="javascript:void(0)" onclick="deployToUniversity('smart')">🏠 Local Test (Smart)</a>
+                            <a href="javascript:void(0)" onclick="deployToUniversity('full')">🔥 Local Test (Full)</a>
+                        </div>
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="btn" style="background:#4b5563;">👁️ Changer de vue</button>
+                        <div class="dropdown-content">
+                            <a href="javascript:void(0)" onclick="switchView('teacher')">Vue Enseignant</a>
+                            <!-- Student Link open in new tab for V3 -->
+                            <a href="http://localhost:8001" target="_blank">Espace Étudiant (Nouvel onglet)</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main id="app">
+            <div id="teacherView">
+
+                <!-- 0. Student Management -->
+                <details class="section">
+                    <summary style="cursor: pointer; user-select: none;">
+                        <h2 style="display: inline-block; margin: 0; vertical-align: middle;">0. Gestion des Étudiants</h2>
+                    </summary>
+
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; margin-top: 1.5rem;">
+                        <!-- Box 1: Ajouter Manuellement -->
+                        <div style="flex: 1; min-width: 250px; padding: 1rem; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                            <h3 style="margin-top: 0; font-size: 1rem; color: #475569; margin-bottom: 0.8rem;">👤 Ajouter un étudiant</h3>
+                            <div style="display:flex; gap:0.5rem;">
+                                <input type="text" id="newStudentId" placeholder="ID (ex: 1234)" maxlength="4" style="flex:1; text-align:center;">
+                                <button class="btn" style="background:#10b981;" onclick="addStudent()">Ajouter</button>
+                            </div>
+                        </div>
+
+                        <!-- Box 2: Création en masse (CSV / Génération) -->
+                        <div style="flex: 2; min-width: 450px; padding: 1rem; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                            <h3 style="margin-top: 0; font-size: 1rem; color: #475569; margin-bottom: 0.8rem;">⚡ Création en masse</h3>
+                            <div style="display:flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+                                <div style="display:flex; gap:0.5rem; align-items:center;">
+                                    <input type="file" id="csvUpload" accept=".csv" style="display:none" onchange="importStudentsCsv(this.files[0])">
+                                    <button class="btn" style="background:#f59e0b;" onclick="document.getElementById('csvUpload').click()">📁 Importer CSV</button>
+                                </div>
+                                <div style="width: 1px; height: 30px; background: #e2e8f0; margin: 0 0.5rem;"></div>
+                                <div style="display:flex; gap:0.5rem; align-items:center;">
+                                    <input type="number" id="batchStartId" placeholder="Départ (ex: 2000)" style="width:130px;">
+                                    <input type="number" id="batchCount" placeholder="Nombre (ex: 30)" style="width:130px;">
+                                    <button class="btn" onclick="createStudentsBatch()" style="background:#0ea5e9;">Générer N</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Box 3: Accès Étudiants -->
+                        <div style="flex: 1; min-width: 200px; padding: 1rem; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                            <h3 style="margin-top: 0; font-size: 1rem; color: #475569; margin-bottom: 0.8rem;">🔑 Accès & Passwords</h3>
+                            <button class="btn" style="background:#6366f1; width: 100%;" onclick="generatePasswords()">🔑 Générer les accès</button>
+                        </div>
+                    </div>
+
+                    <div style="overflow-x:auto; margin-bottom: 2rem;">
+                        <table style="width:100%; border-collapse:collapse; background:white;">
+                            <thead>
+                                <!-- Generated by JS -->
+                            </thead>
+                            <tbody id="studentTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+
+                <div class="section">
+                    <h2>1. Gestion des Cours</h2>
+
+                    <!-- Creation -->
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="margin-top: 0;">➕ Nouveau Cours</h3>
+                        <input type="text" id="newCourseTitle" placeholder="Nom du cours (ex: Mathématiques)">
+                        <button onclick="createCourse()" class="btn">Créer</button>
+                    </div>
+                    
+                    <!-- Selection -->
+                    <div style="margin-bottom: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1.5rem;">
+                        <h3 style="margin-top: 0;">Sélectionnez un cours</h3>
+                        <input type="hidden" id="courseSelector" value="">
+                        <div id="courseList" class="course-list">
+                            <p style="color: #64748b; font-style: italic;">Chargement des cours...</p>
+                        </div>
+                    </div>
+
+                    <!-- Details (Hidden by default) -->
+                    <div id="courseDetails" style="display: none; border-top: 1px solid #e2e8f0; padding-top: 1.5rem;">
+                        <div style="margin-bottom: 1rem; padding: 1rem; background: #e5e7eb; border-radius: 4px;">
+                            <h3>1. Source LaTeX</h3>
+                            <div id="currentLatexFile" style="margin-bottom: 0.5rem; font-style: italic; color: #555;">
+                            </div>
+                            <input type="file" id="latexUpload" accept=".tex">
+                            <button onclick="uploadLatex()" class="btn">Téléverser</button>
+                            <button onclick="viewCourseDocument()" class="btn"
+                                style="background:#0ea5e9; margin-left: 5px;">👁️ Voir</button>
+                            <span id="uploadStatus"></span>
+
+                            <style>
+                                #courseDocumentWrapper {
+                                    display: none;
+                                    margin-top: 10px;
+                                    border: 1px solid #ccc;
+                                    background: white;
+                                    flex-direction: column;
+                                    height: 300px;
+                                }
+
+                                #courseDocumentContainer {
+                                    display: flex;
+                                    flex: 1;
+                                    overflow: hidden;
+                                }
+
+                                #courseDocumentResizer {
+                                    height: 12px;
+                                    background: #f1f5f9;
+                                    cursor: ns-resize;
+                                    border-top: 1px solid #e2e8f0;
+                                    display: flex;
+                                    justify-content: center;
+                                    align-items: center;
+                                }
+
+                                #courseDocumentResizer:hover,
+                                #genPromptResizer:hover {
+                                    background: #e2e8f0;
+                                }
+
+                                .prompt-wrapper {
+                                    display: flex;
+                                    flex-direction: column;
+                                    height: 300px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    margin-bottom: 5px;
+                                }
+
+                                .prompt-input {
+                                    flex: 1;
+                                    resize: none;
+                                    border: none !important;
+                                    margin: 0;
+                                    width: 100% !important;
+                                    box-sizing: border-box;
+                                    padding: 10px;
+                                    font-family: monospace;
+                                    font-size: 1.1em;
+                                }
+
+                                .resizer-bar {
+                                    height: 12px;
+                                    background: #f1f5f9;
+                                    cursor: ns-resize;
+                                    display: flex;
+                                    justify-content: center;
+                                    align-items: center;
+                                }
+
+                                .resizer-bar:hover {
+                                    background: #e2e8f0;
+                                }
+                            </style>
+                            <div id="courseDocumentWrapper">
+                                <div id="courseDocumentContainer">
+                                    <div id="courseDocumentLines"
+                                        style="background:#f3f4f6; color:#9ca3af; text-align:right; padding:10px; border-right:1px solid #ddd; user-select:none; font-family:monospace; font-size:0.9em; min-width:30px; overflow:hidden;">
+                                    </div>
+                                    <pre id="courseDocumentText"
+                                        style="margin:0; padding:10px; font-family:monospace; font-size:0.9em; white-space:pre; overflow-y:scroll; overflow-x:auto; flex:1; min-height:0;"></pre>
+                                </div>
+                                <div id="courseDocumentResizer">
+                                    <div
+                                        style="width: 40px; height: 3px; border-top: 1px solid #94a3b8; border-bottom: 1px solid #94a3b8;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1rem; padding: 1rem; background: #e5e7eb; border-radius: 4px;">
+                            <h3>2. Configuration (Intervalle du cours)</h3>
+                            <div style="display: flex; gap: 1rem; align-items: flex-end;">
+                                <div>
+                                    <label>Ligne Début:</label><br>
+                                    <input type="number" id="startLine" placeholder="0" style="width: 80px;">
+                                </div>
+                                <div>
+                                    <label>Ligne Fin:</label><br>
+                                    <input type="number" id="endLine" placeholder="Ex: 100" style="width: 80px;">
+                                </div>
+                                <button onclick="saveSettingsAndPreview()" class="btn" style="background:#0ea5e9;">👁️
+                                    Prévisualiser</button>
+                            </div>
+                            <div id="previewContainer"
+                                style="margin-top:10px; display:none; background:white; padding:10px; border:1px solid #ccc; font-family:monospace; font-size:0.9em; max-height:200px; overflow-y:auto;">
+                            </div>
+                        </div>
+                        <br>
+                        <br>
+
+                        <div style="margin-bottom: 1rem; padding: 1rem; background: #e0f2fe; border-radius: 4px;">
+                            <h3>3. Génération de la base de questions</h3>
+                            
+                            <div style="display: flex; gap: 1rem; align-items: flex-end; margin-bottom: 1rem;">
+                                <div>
+                                    <label>Nombre de questions:</label><br>
+                                    <input type="number" id="numQuestionsBank" placeholder="Ex: 10" value="10" style="width: 80px;">
+                                </div>
+                                <button onclick="generateQuestionBank()" class="btn" style="background:#0ea5e9;">Valider</button>
+                            </div>
+
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display:block; margin-bottom:5px; font-weight:bold;">Prompt pour la banque de questions :</label>
+                                <textarea id="bankPromptInput" style="width: 100%; height: 200px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; resize: vertical;">Générez {num_questions} questions en Latex, basées sur le segment de cours suivant. Le but est de vérifier si les étudiants ont lu le cours. Posez des questions courtes qui attendent des réponses courtes.
+
+Contexte du cours :
+{course_segment}
+
+- Formatage :
+- Utilisez l'environnement `enumerate`.
+- RETOURNEZ UNIQUEMENT LE CODE LATEX à l'intérieur de enumerate. Pas de conteneur de document.
+- Chaque question doit être formulée dans la langue originale du cours, suivie d'une traduction en français (si le cours n'est pas en français) :
+  \item Question dans la langue originale / \textit{Question en français}...</textarea>
+                                <small style="color:#666; display:block; margin-top:5px; font-size:1em;">
+                                    <strong>Injection Automatique :</strong> Le système remplace les variables suivantes dans votre prompt :
+                                    <ul style="margin-top:5px; padding-left:20px; font-size:1.1em;">
+                                        <li><code>{num_questions}</code> : Le nombre de questions défini ci-dessus.</li>
+                                        <li><code>{course_segment}</code> : Le segment de cours LaTeX sélectionné (Section 2).</li>
+                                    </ul>
+                                </small>
+                            </div>
+
+                            <div id="bankQuestionsContainer" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 10px;">
+                                <!-- Questions will be displayed here -->
+                            </div>
+
+                            <div id="bankActions" style="margin-top: 1rem; display: none; padding-top: 1rem; border-top: 1px solid #cbd5e1;">
+                                <div style="margin-bottom: 1rem;">
+                                    <label style="display:block; margin-bottom:5px; font-weight:bold;">Commentaires (Ajustement des questions) :</label>
+                                    <textarea id="bankCommentsInput" style="width: 100%; height: 260px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; resize: vertical;">Contexte du cours :
+{course_segment}
+
+Questions actuelles :
+{current_questions}
+
+Vos commentaires :
+[TAPEZ VOS COMMENTAIRES ICI]
+
+Veuillez régénérer les questions mises à jour en fonction des commentaires. Si une question n'est pas commentée, réécrivez-la telle quelle.
+
+Formatage :
+- Utilisez l'environnement `enumerate`.
+- RETOURNEZ UNIQUEMENT LE CODE LATEX à l'intérieur de enumerate. Pas de conteneur de document.
+- Chaque question doit être formulée dans la langue originale du cours, suivie d'une traduction en français (si le cours n'est pas en français) :
+  \item Question dans la langue originale / \textit{Question en français}...</textarea>
+                                </div>
+                                <div style="display: flex; gap: 1rem;">
+                                    <button class="btn" style="background:#f59e0b; color:white;" onclick="submitBankComments()">🔄 Soumettre les commentaires</button>
+                                </div>
+                            </div>
+
+                            <div id="questionBankStatus" style="margin-top: 0.5rem;"></div>
+                        </div>
+                        <br>
+
+                        <div style="margin-bottom: 1rem; padding: 1rem; background: #dbeafe; border-radius: 4px;">
+                            <h3>4. Génération des quizzes <span id="nextQuizLabel"
+                                    style="font-size:0.8em; font-weight:normal; color:#555;">(Quiz
+                                    #?)</span></h3>
+
+                            <!-- Mode Tabs -->
+                            <div style="display:flex; gap:0; margin-bottom:15px; border-bottom:2px solid #cbd5e1;">
+                                <button id="tabNextAll" onclick="setGenMode('next_all')" class="btn"
+                                    style="border-radius:6px 6px 0 0; border:1px solid #cbd5e1; border-bottom:none; background:#2563eb; color:white; padding:8px 16px; cursor:pointer; font-weight:bold;">
+                                    🆕 Prochain Quiz (tous)
+                                </button>
+                                <button id="tabRegenAll" onclick="setGenMode('regen_all')" class="btn"
+                                    style="border-radius:6px 6px 0 0; border:1px solid #cbd5e1; border-bottom:none; background:#e2e8f0; color:#374151; padding:8px 16px; cursor:pointer; margin-left:-1px;">
+                                    ♻️ Régénérer dernier (tous)
+                                </button>
+                                <button id="tabIndividual" onclick="setGenMode('individual')" class="btn"
+                                    style="border-radius:6px 6px 0 0; border:1px solid #cbd5e1; border-bottom:none; background:#e2e8f0; color:#374151; padding:8px 16px; cursor:pointer; margin-left:-1px;">
+                                    👤 Individuel
+                                </button>
+                            </div>
+
+                            <!-- Individual Mode Options (hidden by default) -->
+                            <div id="individualOptions"
+                                style="display:none; margin-bottom:15px; padding:12px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px;">
+                                <div style="display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap;">
+                                    <div>
+                                        <label
+                                            style="display:block; margin-bottom:4px; font-weight:bold; font-size:0.9em;">Étudiant
+                                            :</label>
+                                        <select id="genStudentSelect" style="padding:6px; min-width:180px;">
+                                            <option value="">-- Choisir --</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label
+                                            style="display:block; margin-bottom:4px; font-weight:bold; font-size:0.9em;">Quiz
+                                            N° :</label>
+                                        <input type="number" id="genQuizNumber" min="1" placeholder="Ex: 3" oninput="updateGenerateButtonText(); var s=document.getElementById('bankSourceQuizNum'); if(s) s.textContent=this.value||'N';"
+                                            style="width:80px; padding:6px; text-align:center;">
+                                    </div>
+                                </div>
+                                <div style="margin-top:10px;">
+                                    <label
+                                        style="display:block; margin-bottom:4px; font-weight:bold; font-size:0.9em;">Source
+                                        de la banque de questions :</label>
+                                    <label
+                                        style="display:inline-flex; align-items:center; gap:4px; margin-right:16px; cursor:pointer;">
+                                        <input type="radio" name="bankSource" value="current" checked>
+                                        📄 Banque de questions actuelle (cochées en Section 3)
+                                    </label><br>
+                                    <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+                                        <input type="radio" name="bankSource" value="saved_bank">
+                                        📁 Banque de questions du quiz <span id="bankSourceQuizNum">N</span>
+                                    </label>
+                                </div>
+                                <small style="color:#666; margin-top:6px; display:block;">⚠️ Si le quiz existe déjà, il
+                                    sera écrasé (correction et scan supprimés).</small>
+                            </div>
+
+                            <!-- Number of questions config -->
+                            <div style="display:flex; gap:1rem; align-items:flex-end; margin-bottom:15px; padding:12px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px;">
+                                <div>
+                                    <label style="display:block; margin-bottom:4px; font-weight:bold; font-size:0.9em;">Nouvelles questions (n_new) :</label>
+                                    <input type="number" id="genNumNew" min="0" value="2" style="width:80px; padding:6px; text-align:center;">
+                                </div>
+                                <div>
+                                    <label style="display:block; margin-bottom:4px; font-weight:bold; font-size:0.9em;">Anciennes questions (n_old) :</label>
+                                    <input type="number" id="genNumOld" min="0" value="2" style="width:80px; padding:6px; text-align:center;">
+                                </div>
+                            </div>
+
+                            <!-- Prompt Config -->
+                            <div
+                                style="margin-top: 15px; margin-bottom: 15px; border: 1px solid #e5e7eb; padding: 10px; border-radius: 6px; background: #f9fafb;">
+                                <button class="btn-secondary" onclick="toggleGenPromptEditor()"
+                                    style="width:100%; text-align:left; display:flex; justify-content:space-between; align-items:center; background:none; border:none; cursor:pointer; padding:0;">
+                                    <span style="font-weight:bold; color:#374151;">⚙️ Configuration du Prompt &
+                                        Contexte</span>
+                                    <span>▼</span>
+                                </button>
+                                <div id="genPromptEditor" style="display:none; margin-top: 10px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <label
+                                            style="display:block; margin-bottom:5px; font-weight:bold; color:#374151; font-size:1.1em;">Instructucteur
+                                            (Prompt) :</label>
+                                        <div style="display:flex; gap:0.5rem;">
+                                            <button onclick="saveSpecificPrompt('gen')"
+                                                style="font-size:0.8em; cursor:pointer; background:none; border:1px solid #ccc; padding:2px 5px; border-radius:3px;">💾
+                                                Sauvegarder</button>
+                                            <button
+                                                onclick="document.getElementById('genPromptInput').value = DEFAULT_PROMPT_GEN"
+                                                style="font-size:0.8em; cursor:pointer;">↺ Restaurer défaut</button>
+                                        </div>
+                                    </div>
+                                    <div id="genPromptWrapper" class="prompt-wrapper">
+                                        <textarea id="genPromptInput" class="prompt-input">Contexte du cours :
+{context}
+
+Historique de l'étudiant :
+{history}
+
+Questions sélectionnées dans la banque :
+{selected_questions}
+
+Tâche :
+Créez un quiz d'exactement {n_total} questions.
+1. Choisissez {n_old} questions de "Historique de l'étudiant" auxquelles l'étudiant n'a pas répondu correctement.
+2. Choisissez {n_new} questions des "Questions sélectionnées dans la banque" ci-dessus.
+3. Si vous ne trouvez pas {n_old} questions échouées dans l'historique, choisissez des questions supplémentaires dans les "Questions sélectionnées dans la banque" pour atteindre le total de {n_total} questions.
+
+Formatage :
+- Utilisez l'environnement `enumerate`.
+- RETOURNEZ UNIQUEMENT LE CODE LATEX à l'intérieur de enumerate. Pas de conteneur de document.
+- Chaque question doit être formulée dans la langue originale du cours, suivie d'une traduction en français (si le cours n'est pas en français) :
+  \item Question dans la langue originale / \textit{Question en français}...</textarea>
+                                        <div id="genPromptResizer" class="resizer-bar">
+                                            <div
+                                                style="width: 40px; height: 3px; border-top: 1px solid #94a3b8; border-bottom: 1px solid #94a3b8;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <small style="color:#666; display:block; margin-top:5px; font-size:1em;">
+                                        <strong>Injection Automatique :</strong> Le système remplace les variables
+                                        suivantes dans votre prompt :
+                                        <ul style="margin-top:5px; padding-left:20px; font-size:1.1em;">
+                                            <li><code>{history}</code> : L'historique des quiz de l'étudiant (anciennes
+                                                questions et notes, <strong>uniquement pour ce cours</strong>)</li>
+                                            <li><code>{context}</code> : Le contenu du cours LaTeX</li>
+                                            <li><code>{selected_questions}</code> : Les questions actuellement cochées dans la Section 3</li>
+                                            <li><code>{n_new}</code>, <code>{n_old}</code>, <code>{n_total}</code> : Nombres définis ci-dessus</li>
+                                        </ul>
+                                        Et <strong>après</strong> votre prompt :
+                                        <ul style="margin-top:2px; padding-left:20px;">
+                                            <li>Les instructions spécifiques définies ci-dessous (si remplies).</li>
+                                        </ul>
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Specific Instructions Box -->
+                            <div style="margin-bottom: 15px;">
+                                <label
+                                    style="display:block; margin-bottom:5px; font-weight:bold; color:#374151;">Instructions
+                                    Spécifiques (Optionnel) :</label>
+                                <textarea id="specificInstructionsInput" rows="3"
+                                    style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-family:monospace; font-size:0.9em;"
+                                    placeholder="Ex: Focus on Chapter 3 specifically..."></textarea>
+                                <small style="color:#666;">Ce texte sera ajouté à la fin du prompt pour cette génération
+                                    uniquement.</small>
+                            </div>
+
+                            <button id="btnGenerate" onclick="handleGeneration()" class="btn"
+                                style="font-size:1.05em; padding:10px 20px;">🚀 Lancer la Génération</button>
+                            <div id="genStatus" style="margin-top: 0.5rem;"></div>
+                        </div>
+
+                        <!-- 4. Gradebook -->
+                        <div
+                            style="margin-bottom: 1rem; padding: 1rem; background: white; border: 1px solid #ccc; border-radius: 4px;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <h3>5. Carnet de Notes</h3>
+                                <button onclick="loadGradebook()" class="btn"
+                                    style="background:#4b5563; font-size:0.8em;">Rafraîchir</button>
+                            </div>
+                            <div id="gradebookContainer" style="overflow-x: auto; margin-top:1rem;">
+                                <i>Sélectionnez un cours pour voir les notes.</i>
+                            </div>
+                        </div>
+                        <!-- Gradebook Section ends here without closing courseDetails -->
+
+                        <div style="margin-bottom: 2rem; border-top: 1px solid #ccc; padding-top: 1rem;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <h3>6. Présence</h3>
+                                <button onclick="loadAttendance()" class="btn"
+                                    style="background:#4b5563; font-size:0.8em;">Rafraîchir</button>
+                            </div>
+                            <div style="margin-bottom: 1rem; background: #f9fafb; padding: 10px; border-radius: 4px;">
+                                <label>Date: <input type="text" id="attDate" placeholder="JJ/MM/AAAA" maxlength="10"
+                                        style="width:120px; text-align:center;" oninput="formatDateInput(this)"></label>
+                                <label style="margin-left: 10px;">Heure: <input type="time" id="attTime"></label>
+                                <button onclick="addSession()" class="btn"
+                                    style="margin-left: 10px; font-size:0.9em;">Ajouter une séance</button>
+                            </div>
+                            <div id="attendanceContainer" style="overflow-x: auto;">
+                                <i>Sélectionnez un cours pour voir l'appel.</i>
+                            </div>
+                        </div> <!-- End Attendance box -->
+
+                        <div style="margin-top:20px; text-align:right; border-top:1px solid #ccc; padding-top:10px;">
+                            <button class="btn" style="background:#dc2626;" onclick="deleteCourse()">🗑️ Supprimer ce
+                                Cours</button>
+                        </div>
+                    </div> <!-- End courseDetails -->
+                </div> <!-- End section -->
+
+                <details class="section">
+                    <summary style="cursor: pointer; user-select: none;">
+                        <h2 style="display: inline-block; margin: 0; vertical-align: middle;">2. Correction Automatique</h2>
+                    </summary>
+
+                    <div style="background:#fff; padding:20px; border-radius:8px; border:1px solid #eee; margin-top: 1rem;">
+
+                        <!-- 1. Configuration -->
+                        <div style="margin-bottom:20px;">
+                            <h3 style="margin-top:0;">1. Prompt de Correction</h3>
+
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                <span style="font-size:0.8em; color:#666;">(Laisser vide pour utiliser le défaut)</span>
+                                <div style="display:flex; gap:0.5rem;">
+                                    <button onclick="saveSpecificPrompt('grading')"
+                                        style="font-size:0.8em; cursor:pointer; background:none; border:1px solid #ccc; padding:2px 5px; border-radius:3px;">💾
+                                        Sauvegarder</button>
+                                    <button class="btn"
+                                        onclick="document.getElementById('gradingPromptInput').value = DEFAULT_PROMPT_GRADING"
+                                        style="font-size:0.8em; padding:2px 8px;">Restaurer Défaut</button>
+                                </div>
+                            </div>
+                            <div id="gradingPromptWrapper" class="prompt-wrapper">
+                                <textarea id="gradingPromptInput" class="prompt-input"
+                                    placeholder="Rôle : Correcteur..."></textarea>
+                                <div id="gradingPromptResizer" class="resizer-bar">
+                                    <div
+                                        style="width: 40px; height: 3px; border-top: 1px solid #94a3b8; border-bottom: 1px solid #94a3b8;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Upload -->
+                        <div
+                            style="margin-bottom:30px; text-align:center; padding:30px; border:2px dashed #3b82f6; background:#eff6ff; border-radius:8px;">
+                            <h3 style="margin-top:0; color:#1e40af;">2. Ajouter des Scans</h3>
+                            <p style="color:#60a5fa;">Formats supportés : PDF, PNG, JPG</p>
+
+                            <div
+                                style="margin-bottom:15px; display:flex; flex-wrap:wrap; justify-content:center; gap:20px; align-items:flex-end;">
+                                <!-- Course Selector Moved Here -->
+                                <div style="text-align:left;">
+                                    <label style="display:block; margin-bottom:5px;">Cours :</label>
+                                    <select id="v2_course_selector"
+                                        style="width:200px; padding:5px; border:1px solid #ccc; border-radius:4px;">
+                                        <option value="">Sélectionner le cours...</option>
+                                    </select>
+                                </div>
+
+                                <div style="text-align:left;">
+                                    <label style="display:block; margin-bottom:5px;">Pages par copie :</label>
+                                    <input type="number" id="v2_pages_per_copy" value="2" min="1"
+                                        style="width:80px; padding:5px; text-align:center;">
+                                </div>
+
+                                <div style="text-align:left;">
+                                    <label style="display:block; margin-bottom:5px;">Quiz par défaut :</label>
+                                    <input type="number" id="v2_default_quiz" placeholder="Auto"
+                                        style="width:80px; padding:5px; text-align:center;">
+                                </div>
+                            </div>
+
+                            <input type="file" id="v2_upload" multiple accept=".pdf,.png,.jpg,.jpeg"
+                                style="display:none" onchange="handleV2Upload(this.files)">
+                            <button class="btn" onclick="document.getElementById('v2_upload').click()"
+                                style="background:#3b82f6; font-size:1.1em; padding:10px 20px;">
+                                📁 Sélectionner des fichiers
+                            </button>
+                            <div id="v2_upload_status" style="margin-top:10px; font-weight:bold;"></div>
+                        </div>
+
+                        <!-- 3. Verification Queue -->
+                        <div id="v2_queue_container" style="display:none;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <h3 style="margin:0;">3. Vérification & Validation</h3>
+                                <button id="v2_btn_grade" class="btn" style="background:#10b981;"
+                                    onclick="processV2Queue()" disabled>
+                                    🚀 Lancer la Correction (<span id="v2_count_ready">0</span>)
+                                </button>
+                            </div>
+
+                            <table style="width:100%; border-collapse:collapse; margin-top:10px; background:white;">
+                                <thead>
+                                    <tr style="background:#f3f4f6; text-align:left; border-bottom:2px solid #ddd;">
+                                        <th style="width:20px; padding:10px;"></th>
+                                        <th style="padding:10px;">Fichier</th>
+                                        <th style="padding:10px;">ID Étudiant</th>
+                                        <th style="padding:10px;">Quiz #</th>
+                                        <th style="padding:10px;">Cours</th>
+                                        <th style="padding:10px;">Confiance</th>
+                                        <th style="padding:10px;">Note</th>
+                                        <th style="padding:10px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="v2_queue_body"></tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </details>
+
+
+
+
+
+
+
+                <!-- Summary Section (Initially Hidden) -->
+                <div id="summarySection"
+                    style="margin-top: 2rem; display: none; background: #fdf4ff; border: 1px solid #d8b4fe; padding: 1rem; border-radius: 8px;">
+                    <h3 style="color: #6b21a8; margin-top: 0;">Synthèse Globale</h3>
+
+                    <div style="margin-bottom: 1rem;">
+                        <button class="btn" style="background: #a855f7; font-size: 0.9em;"
+                            onclick="togglePromptEditor()">📝
+                            Modifier le Prompt de Synthèse</button>
+
+                        <div id="promptEditor"
+                            style="display:none; margin-top:0.5rem; background: white; padding: 0.5rem; border: 1px solid #ddd;">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                <label style="font-weight:bold;">Instructucteur (Synthèse) :</label>
+                                <div style="display:flex; gap:0.5rem;">
+                                    <button onclick="saveSpecificPrompt('summary')"
+                                        style="font-size:0.8em; cursor:pointer; background:none; border:1px solid #ccc; padding:2px 5px; border-radius:3px;">💾
+                                        Sauvegarder</button>
+                                    <button
+                                        onclick="document.getElementById('summaryPromptInput').value = DEFAULT_PROMPT_SUMMARY"
+                                        style="font-size:0.8em; cursor:pointer;">↺ Restaurer défaut</button>
+                                </div>
+                            </div>
+                            <div id="summaryPromptWrapper" class="prompt-wrapper">
+                                <textarea id="summaryPromptInput" class="prompt-input"
+                                    placeholder="Laissez vide pour utiliser le prompt par défaut."></textarea>
+                                <div id="summaryPromptResizer" class="resizer-bar">
+                                    <div
+                                        style="width: 40px; height: 3px; border-top: 1px solid #94a3b8; border-bottom: 1px solid #94a3b8;">
+                                    </div>
+                                </div>
+                            </div>
+                            <p style="font-size:0.8em; color:#666;">Note: Les statistiques et les points faibles
+                                seront
+                                automatiquement ajoutés à la suite de votre prompt.</p>
+                        </div>
+                    </div>
+
+                    <button id="btnSummary" onclick="generateReport()" class="btn"
+                        style="background: #7c3aed; width: 100%; font-size: 1.1em;">✨ Générer Rapport
+                        Global</button>
+                </div>
+
+
+            </div>
+
+    </div> <!-- End teacherView -->
+
+    <div id="studentView" style="display: none;">
+        <div class="section">
+            <h2>Espace Étudiant</h2>
+
+            <div style="margin-bottom:1rem; padding:1rem; background:#eff6ff; border-radius:8px;">
+                <h3>1. Identification</h3>
+                <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                    <div>
+                        <label>Je suis :</label><br>
+                        <select id="studentLoginSelect" onchange="loadStudentCourses()">
+                            <option value="">-- Choisir ID --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Cours :</label><br>
+                        <select id="studentCourseSelect" onchange="loadStudentQuizzes()">
+                            <option value="">-- Choisir un cours --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="studentQuizListSection" style="display:none;">
+                <h3>2. Mes Interrogations</h3>
+                <div id="studentQuizList" style="display:flex; gap:0.5rem; overflow-x:auto; padding-bottom:1rem;">
+                    <!-- Quiz Buttons -->
+                </div>
+            </div>
+
+            <div id="studentQuizViewer"
+                style="display:none; margin-top:1rem; border-top:1px solid #ddd; padding-top:1rem;">
+                <h3 id="viewerTitle">Quiz #?</h3>
+                <div style="display:flex; gap:1rem; height:600px;">
+                    <!-- Left: Scan -->
+                    <div style="flex:1; border:1px solid #ccc; background:#000;">
+                        <iframe id="scanViewer" style="width:100%; height:100%; border:none;"></iframe>
+                    </div>
+
+                    <!-- Right: Feedback -->
+                    <div style="flex:1; border:1px solid #ccc; background:#fff; padding:1rem; overflow-y:auto;"
+                        id="feedbackViewer">
+                        <i>Sélectionnez un quiz.</i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chatbot Section -->
+        <div class="section" style="display: flex; flex-direction: column;">
+            <h3>Assistant Personnel</h3>
+            <!-- ... Chat UI ... -->
+            <div id="chatHistory"
+                style="height: 600px; overflow-y: auto; border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem; border-radius:4px; font-size:1.05rem; background: #fff; resize: vertical;">
+                <div style="color: #6b7280; font-style: italic;">Posez une question à votre tuteur...</div>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
+                <textarea id="chatInput" placeholder="Posez votre question... (Shift+Enter pour saut de ligne)"
+                    style="flex: 1; resize: none; height: 50px; font-family: inherit;"></textarea>
+                <button class="btn" onclick="sendChat()" style="height: 50px;">Envoyer</button>
+            </div>
+        </div>
+    </div>
+    </main>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
+        <div
+            style="background:white; padding:2rem; border-radius:8px; width:400px; max-width:90%; text-align:center; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+            <h3 style="margin-top:0;">Confirmer la suppression</h3>
+            <p id="confirmText">Voulez-vous vraiment supprimer cet étudiant ?</p>
+            <div style="margin-top:1.5rem; display:flex; justify-content:center; gap:1rem;">
+                <button id="cancelBtn" class="btn" style="background:#9ca3af;">Annuler</button>
+                <button id="confirmBtn" class="btn" style="background:#dc2626;">Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div id="editStudentModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
+        <div
+            style="background:white; padding:2rem; border-radius:8px; width:400px; max-width:90%; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+            <h3 style="margin-top:0; margin-bottom:1rem; text-align:center;">Modifier un étudiant</h3>
+            <div style="display:flex; flex-direction:column; gap:1rem; text-align:left;">
+                <div>
+                    <label style="display:block; margin-bottom:4px; font-weight:bold;">Nom</label>
+                    <input type="text" id="editStudentNom"
+                        style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #d1d5db; border-radius:4px;">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:4px; font-weight:bold;">Prénom</label>
+                    <input type="text" id="editStudentPrenom"
+                        style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #d1d5db; border-radius:4px;">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:4px; font-weight:bold;">Email</label>
+                    <input type="email" id="editStudentEmail"
+                        style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #d1d5db; border-radius:4px;">
+                </div>
+            </div>
+            <div style="margin-top:1.5rem; display:flex; justify-content:center; gap:1rem;">
+                <button class="btn" style="background:#9ca3af;" onclick="closeEditModal()">Annuler</button>
+                <button class="btn" style="background:#10b981;" onclick="submitEditStudent()">Enregistrer</button>
+            </div>
+            <input type="hidden" id="editStudentId">
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast"
+        style="display:none; position:fixed; bottom:20px; right:20px; background:#333; color:white; padding:12px 24px; border-radius:4px; z-index:10001; animation: fadeIn 0.3s;">
+    </div>
+
+    <script>
+        console.log(">>> HTML LOADED, SCRIPT STARTING (Step 1 Base) <<<");
+        let globalStudentsData = [];
+        let globalCoursesData = [];
+        let globalCoursesById = {};
+        let hiddenCourses = new Set();
+        let showEmails = false;
+
+        // --- CONSTANTS ---
+        const DEFAULT_PROMPT_GEN = `Contexte du cours :
+{context}
+
+Historique de l'étudiant :
+{history}
+
+Questions sélectionnées dans la banque :
+{selected_questions}
+
+Tâche :
+Créez un quiz d'exactement {n_total} questions.
+1. Choisissez {n_old} questions de "Historique de l'étudiant" auxquelles l'étudiant n'a pas répondu correctement.
+2. Choisissez {n_new} questions des "Questions sélectionnées dans la banque" ci-dessus.
+3. Si vous ne trouvez pas {n_old} questions échouées dans l'historique, choisissez des questions supplémentaires dans les "Questions sélectionnées dans la banque" pour atteindre le total de {n_total} questions.
+
+Formatage :
+- Utilisez l'environnement \`enumerate\`.
+- RETOURNEZ UNIQUEMENT LE CODE LATEX à l'intérieur de enumerate. Pas de conteneur de document.
+- Chaque question doit être formulée dans la langue originale du cours, suivie d'une traduction en français (si le cours n'est pas en français) :
+  \\item Question dans la langue originale / \\textit{Question en français}...`;
+
+        const DEFAULT_PROMPT_GRADING = `Rôle : Correcteur. Utilisez LaTeX pour les formules mathématiques.
+
+Attitude :
+- Soyez ferme lorsque la réponse est clairement fausse.
+- Si la question est un peu vague, tolérez que la réponse le soit aussi.
+- Si la réponse n'est pas fausse mais incomplète, vous pouvez fermer les yeux si seuls des détails manquent.
+
+Contexte :
+Questions Originales (LaTeX) :
+{latex_context}
+{course_context_injection}
+
+Soumission de l'étudiant (Texte/Scan) :
+{student_submission}
+
+Tâche :
+1. Transcrire les réponses.
+2. Noter sur 20.
+3. Fournir des commentaires (dans la langue originale du cours, suivis d'une traduction en français si ce n'est pas le français).
+
+Sortie JSON :
+{
+    "grades": [{
+        "question_number": 1,
+        "question_text": "Texte original...",
+        "transcription": "Transcription LITTÉRALE de ce que l'étudiant a écrit pour cette question spécifique (OCR).",
+        "score": 4,
+        "feedback": "Commentaires détaillés..."
+    }],
+    "total_score": 15
+}`;
+
+        const DEFAULT_PROMPT_SUMMARY = `Rôle : Professeur Principal.
+Tâche : Rédiger une courte synthèse globale de la classe basée sur ces résultats.
+
+Statistiques :
+- Nombre : {count} étudiants
+- Moyenne : {avg}/20
+
+Concepts mal compris fréquents :
+{weak_points}
+
+Format de sortie : Markdown. Soyez encourageant but précis.`;
+
+        // --- UNIVERSAL Modal Logic ---
+        let onConfirmCallback = null;
+
+        const modal = document.getElementById('confirmModal');
+        const confirmText = document.getElementById('confirmText');
+        const modalTitle = document.querySelector('#confirmModal h3');
+        const toast = document.getElementById('toast');
+
+        function openModal(title, message, callback, confirmLabel = "Supprimer", confirmColor = "#dc2626") {
+            if (modalTitle) modalTitle.innerText = title;
+            if (confirmText) confirmText.innerHTML = message;
+
+            const btn = document.getElementById('confirmBtn');
+            if (btn) {
+                btn.innerText = confirmLabel;
+                btn.style.background = confirmColor;
+            }
+
+            onConfirmCallback = callback;
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function showToast(msg, color = '#333') {
+            if (toast) {
+                toast.innerHTML = msg;
+                toast.style.background = color;
+                toast.style.display = 'block';
+                setTimeout(() => { toast.style.display = 'none'; }, 3000);
+            }
+        }
+
+        const cancelBtn = document.getElementById('cancelBtn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                if (modal) modal.style.display = 'none';
+                onConfirmCallback = null;
+            });
+        }
+
+        const confirmBtn = document.getElementById('confirmBtn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', async () => {
+                if (modal) modal.style.display = 'none'; // Close first
+                if (onConfirmCallback) {
+                    await onConfirmCallback();
+                    onConfirmCallback = null; // Reset
+                }
+            });
+        }
+
+        // --- UI TOGGLES ---
+        function togglePromptEditor() {
+            const div = document.getElementById('promptEditor');
+            div.style.display = div.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function toggleGenPromptEditor() {
+            const div = document.getElementById('genPromptEditor');
+            div.style.display = div.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // --- LOAD COURSES ---
+        async function loadCourses() {
+            // Init Default Prompts
+            if (document.getElementById('genPromptInput') && !document.getElementById('genPromptInput').value) {
+                document.getElementById('genPromptInput').value = DEFAULT_PROMPT_GEN;
+            }
+            if (document.getElementById('gradingPromptInput') && !document.getElementById('gradingPromptInput').value) {
+                document.getElementById('gradingPromptInput').value = DEFAULT_PROMPT_GRADING;
+            }
+            if (document.getElementById('summaryPromptInput') && !document.getElementById('summaryPromptInput').value) {
+                document.getElementById('summaryPromptInput').value = DEFAULT_PROMPT_SUMMARY;
+            }
+
+            try {
+                console.log("Fetching courses...");
+                const res = await fetch('/api/courses?_t=' + Date.now());
+                const courses = await res.json();
+                globalCoursesData = courses;
+                globalCoursesById = {};
+                console.log("Courses loaded:", courses);
+
+                // Populate Main Course List AND Force Selector AND V2 Selector
+                const listContainer = document.getElementById('courseList');
+                const forceSelect = document.getElementById('forceCourseId');
+                const v2Select = document.getElementById('v2_course_selector');
+
+                listContainer.innerHTML = '';
+                if (v2Select) v2Select.innerHTML = '<option value="">Sélectionner le cours à corriger...</option>';
+
+                courses.forEach(c => {
+                    globalCoursesById[c.id] = c;
+
+                    // 1. Main List Item
+                    const item = document.createElement('div');
+                    item.className = 'course-item';
+                    item.id = `course-item-${c.id}`;
+                    item.onclick = () => selectCourse(c.id);
+                    item.innerHTML = `
+                        <span class="course-title">${c.title}</span>
+                        <span class="course-id">${c.id}</span>
+                    `;
+                    listContainer.appendChild(item);
+
+                    // 2. Force Selector
+                    if (forceSelect) {
+                        const opt2 = document.createElement('option');
+                        opt2.value = c.id;
+                        opt2.innerText = `${c.title}`;
+                        forceSelect.appendChild(opt2);
+                    }
+
+                    // 3. V2 Selector
+                    if (v2Select) {
+                        const opt3 = document.createElement('option');
+                        opt3.value = c.id;
+                        opt3.innerText = `${c.title} (${c.id})`;
+                        v2Select.appendChild(opt3);
+                    }
+                });
+
+                if (courses.length === 0) {
+                    listContainer.innerHTML = '<p style="color: #94a3b8; font-style: italic;">Aucun cours disponible.</p>';
+                }
+
+            } catch (e) {
+                console.error("Error loading courses:", e);
+                document.getElementById('courseList').innerHTML = '<p style="color: #dc2626;">Erreur de chargement.</p>';
+                showToast("Erreur chargement cours", "red");
+            }
+        }
+
+        function selectCourse(courseId) {
+            const selector = document.getElementById('courseSelector');
+            const details = document.getElementById('courseDetails');
+
+            // Toggle logic: if clicking the course that is already selected, hide everything
+            if (selector.value === courseId && details.style.display !== 'none') {
+                selector.value = "";
+                document.querySelectorAll('.course-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                details.style.display = 'none';
+                return;
+            }
+
+            // Normal selection logic
+            selector.value = courseId;
+
+            // Update visual selection
+            document.querySelectorAll('.course-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const selectedItem = document.getElementById(`course-item-${courseId}`);
+            if (selectedItem) selectedItem.classList.add('active');
+
+            // Load details
+            loadCourseDetails();
+        }
+
+        let currentSortColumn = 'id';
+        let currentSortOrder = 'asc';
+
+        function sortGlobalStudents(column) {
+            if (currentSortColumn === column) {
+                currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortColumn = column;
+                currentSortOrder = 'asc';
+            }
+            renderGlobalStudents();
+        }
+
+        function toggleCourseVisibility(courseId, isChecked) {
+            if (isChecked) {
+                hiddenCourses.delete(courseId);
+            } else {
+                hiddenCourses.add(courseId);
+            }
+            renderGlobalStudents();
+        }
+
+        function toggleEmails() {
+            showEmails = !showEmails;
+            renderGlobalStudents();
+        }
+
+        function selectAllEmails() {
+            const checkboxes = document.querySelectorAll('.email-checkbox:not(:disabled)');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = !allChecked);
+        }
+
+        function copySelectedEmails() {
+            const checkboxes = document.querySelectorAll('.email-checkbox:checked');
+            const emails = Array.from(checkboxes).map(cb => cb.dataset.email).filter(e => e && e.trim());
+            if (emails.length === 0) {
+                showToast('Aucun email sélectionné', 'orange');
+                return;
+            }
+            const text = emails.join('; ');
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`${emails.length} email(s) copié(s) dans le presse-papier`, 'green');
+                document.querySelectorAll('.email-checkbox:checked').forEach(cb => cb.checked = false);
+            }).catch(() => {
+                showToast('Erreur lors de la copie', 'red');
+            });
+        }
+
+        function renderGlobalStudents() {
+            const tbody = document.getElementById('studentTableBody');
+            if (!tbody || !globalStudentsData) return;
+
+            // Generate Headers dynamically
+            const thead = tbody.previousElementSibling;
+
+            let html = `
+                <tr style="background:white; border:none;">
+                    <th colspan="3" style="border:none; text-align:right; padding-bottom:8px;">
+                        <button class="btn" onclick="toggleEmails()" style="background:#4b5563; font-size:0.8em; padding:4px 8px; margin-right:5px;">${showEmails ? '👁️ Cacher les emails' : '👁️ Montrer les emails'}</button>
+                    </th>
+                    <th colspan="${showEmails ? 3 : 2}" style="border:none;"></th>
+                    <th colspan="${globalCoursesData ? Math.max(1, globalCoursesData.filter(c => !hiddenCourses.has(c.id)).length) : 1}" style="border:none; text-align:left; padding-bottom:8px;">
+                        <div class="dropdown" style="display:inline-block;">
+                            <button class="btn" style="background:#4b5563; font-size:0.8em; padding:4px 8px;">👁️ Cours affichés ▼</button>
+                            <div class="dropdown-content" style="padding:10px; min-width:200px; text-align:left;">
+            `;
+
+            if (globalCoursesData) {
+                globalCoursesData.forEach(c => {
+                    const isChecked = !hiddenCourses.has(c.id);
+                    html += `<label style="display:flex; align-items:center; cursor:pointer; margin-bottom:5px; gap:8px;">
+                                <input type="checkbox" value="${c.id}" ${isChecked ? 'checked' : ''} onchange="toggleCourseVisibility('${c.id}', this.checked)"> ${c.title}
+                             </label>`;
+                });
+            }
+
+            html += `
+                            </div>
+                        </div>
+                    </th>
+                    <th colspan="2" style="border:none;"></th>
+                </tr>
+                <tr style="background:#f3f4f6; text-align:left;">
+                    <th style="padding:8px; border:1px solid #e5e7eb; cursor:pointer;" onclick="sortGlobalStudents('id')" title="Trier par ID">ID ↕️</th>
+                    <th style="padding:8px; border:1px solid #e5e7eb; cursor:pointer;" onclick="sortGlobalStudents('nom')" title="Trier par Nom">Nom ↕️</th>
+                    <th style="padding:8px; border:1px solid #e5e7eb; cursor:pointer;" onclick="sortGlobalStudents('prenom')" title="Trier par Prénom">Prénom ↕️</th>
+                    ${showEmails ? `<th style="padding:8px; border:1px solid #e5e7eb;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span>Email</span>
+                            <button class="btn" onclick="selectAllEmails()" style="background:#6366f1; font-size:0.7em; padding:2px 6px;" title="Tout sélectionner">☑ Tout</button>
+                            <button class="btn" onclick="copySelectedEmails()" style="background:#0ea5e9; font-size:0.7em; padding:2px 6px;" title="Copier les emails sélectionnés">📋 Copier</button>
+                        </div>
+                    </th>` : ''}
+                    <th style="padding:8px; border:1px solid #e5e7eb; cursor:pointer;" onclick="sortGlobalStudents('absences')" title="Trier par Absences">Absences ↕️</th>
+                    <th style="padding:8px; border:1px solid #e5e7eb; cursor:pointer;" onclick="sortGlobalStudents('notes')" title="Trier par Notes">Notes ↕️</th>
+            `;
+            if (globalCoursesData) {
+                globalCoursesData.forEach(c => {
+                    if (!hiddenCourses.has(c.id)) {
+                        html += `<th style="padding:8px; border:1px solid #e5e7eb; text-align:center;">${c.title}<br><small style="font-weight:normal;">(${c.id})</small></th>`;
+                    }
+                });
+            }
+            html += `
+                    <th style="padding:8px; border:1px solid #e5e7eb;">Mot de Passe</th>
+                    <th style="padding:8px; border:1px solid #e5e7eb;">Action</th>
+                </tr>
+            `;
+            thead.innerHTML = html;
+
+            const totalCols = (showEmails ? 8 : 7) + (globalCoursesData ? globalCoursesData.filter(c => !hiddenCourses.has(c.id)).length : 0);
+
+            let students = [...globalStudentsData];
+
+            students.sort((a, b) => {
+                let valA, valB;
+                if (currentSortColumn === 'id') { valA = a.id; valB = b.id; }
+                else if (currentSortColumn === 'nom') { valA = a.last_name || ''; valB = b.last_name || ''; }
+                else if (currentSortColumn === 'prenom') { valA = a.first_name || ''; valB = b.first_name || ''; }
+                else if (currentSortColumn === 'email') { valA = a.email || ''; valB = b.email || ''; }
+                else if (currentSortColumn === 'absences') { valA = a.absences || 0; valB = b.absences || 0; }
+                else if (currentSortColumn === 'notes') {
+                    valA = typeof a.average_grade === 'number' ? a.average_grade : -1;
+                    valB = typeof b.average_grade === 'number' ? b.average_grade : -1;
+                }
+
+                let res = 0;
+                if (typeof valA === 'string' && typeof valB === 'string') {
+                    res = valA.localeCompare(valB, undefined, { numeric: true });
+                } else {
+                    res = valA > valB ? 1 : (valA < valB ? -1 : 0);
+                }
+                return currentSortOrder === 'asc' ? res : -res;
+            });
+
+            tbody.innerHTML = '';
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${totalCols}" style="text-align:center;">Aucun étudiant.</td></tr>`;
+                return;
+            }
+
+            students.forEach(s => {
+                const tr = document.createElement('tr');
+                const nom = s.last_name || '';
+                const prenom = s.first_name || '';
+                const absences = s.absences !== undefined ? s.absences : 0;
+                const notes = s.average_grade !== undefined && s.average_grade !== '-' ? s.average_grade : '-';
+
+                let trHTML = `
+                    <td>${s.id}</td>
+                    <td>${nom}</td>
+                    <td>${prenom}</td>
+                    ${showEmails ? `<td style="color:#6b7280; font-style:italic;"><label style="display:flex; align-items:center; gap:6px; cursor:pointer; margin:0;"><input type="checkbox" class="email-checkbox" data-email="${s.email || ''}" ${!s.email ? 'disabled' : ''}> ${s.email || 'vide'}</label></td>` : ''}
+                    <td style="text-align:center; font-weight:bold; color: ${absences > 0 ? '#dc2626' : '#059669'};">${absences}</td>
+                    <td style="text-align:center; font-weight:bold;">${notes}</td>
+                `;
+
+                if (globalCoursesData) {
+                    globalCoursesData.forEach(c => {
+                        if (hiddenCourses.has(c.id)) return;
+
+                        const enrolled = (c.enrolled_students || []).includes(s.id);
+                        const btnColor = enrolled ? '#10b981' : '#9ca3af';
+                        const btnText = enrolled ? 'I' : 'NI';
+
+                        let statsHtml = '';
+                        if (s.course_stats && s.course_stats[c.id]) {
+                            const st = s.course_stats[c.id];
+                            const abs = st.absences > 0 ? `<span style="color:#dc2626; font-weight:bold;" title="Absences dans ce cours">A:${st.absences}</span>` : '';
+                            const grd = st.average_grade !== '-' ? `<span style="color:black; font-weight:bold; margin-left:4px;" title="Moyenne dans ce cours">★${st.average_grade}</span>` : '';
+                            if (abs || grd) {
+                                statsHtml = `<div style="font-size:0.8em; display:flex; gap:4px; align-items:center;">${abs} ${grd}</div>`;
+                            }
+                        }
+
+                        trHTML += `
+                            <td style="text-align:left; padding-left:12px;">
+                                <div style="display:flex; justify-content:flex-start; align-items:center; gap:6px;">
+                                    <button onclick="toggleEnrollment('${s.id}', '${c.id}', ${enrolled})" class="btn" style="background:${btnColor}; font-size:0.8em; padding:4px 8px; margin:0; border:none; border-radius:3px; color:white; cursor:pointer;" title="${enrolled ? 'Désinscrire' : 'Inscrire'}">${btnText}</button>
+                                    ${statsHtml}
+                                </div>
+                            </td>
+                        `;
+                    });
+                }
+
+                trHTML += `
+                    <td style="font-family:monospace;">${s.password || 'N/A'}</td>
+                    <td style="display: flex; gap: 0.5rem; justify-content: flex-start; align-items: center;">
+                        <button class="btn" style="background:#3b82f6; padding:5px 10px; font-size:0.8em;" onclick="openEditModal('${s.id}', '${nom.replace(/'/g, "\\'")}', '${prenom.replace(/'/g, "\\'")}', '${(s.email || '').replace(/'/g, "\\'")}')">✏️</button>
+                        <a href="/student_history?student_id=${s.id}" target="_blank" style="font-size: 0.8em; color: #2563eb; text-decoration: none; padding: 4px 8px; border: 1px solid #2563eb; border-radius: 4px; background: #eff6ff; display: inline-block; white-space: nowrap;">
+                            👁️ Voir Historique
+                        </a>
+                        <button class="btn" style="background:#dc2626; padding:5px 10px; font-size:0.8em; margin-left:1.5rem;" onclick="deleteStudent('${s.id}')">🗑️</button>
+                    </td>
+                `;
+                tr.innerHTML = trHTML;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- LOAD STUDENTS (GLOBAL) ---
+        async function loadStudentsGlobal() {
+            const tbody = document.getElementById('studentTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Chargement...</td></tr>';
+
+            try {
+                const res = await fetch('/api/students');
+                const students = await res.json();
+                globalStudentsData = students;
+                renderGlobalStudents();
+            } catch (e) {
+                console.error("Error loading students:", e);
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Erreur de chargement.</td></tr>';
+            }
+        }
+
+        // --- STUDENT LOGIN (VIEW) ---
+        async function loadStudentLogin() {
+            const select = document.getElementById('studentLoginSelect');
+            if (!select) return;
+            // Reuse the /api/students endpoint or simular
+            try {
+                const res = await fetch('/api/students');
+                const students = await res.json();
+                select.innerHTML = '<option value="">-- Choisir ID --</option>';
+                students.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.innerText = `${s.name} (${s.id})`;
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // --- GLOBAL VIEWS SWITCH ---
+        function switchView(role) {
+            console.log("Switching to", role);
+            if (role === 'teacher') {
+                document.getElementById('teacherView').style.display = 'block';
+                document.getElementById('studentView').style.display = 'none';
+            }
+        }
+
+        // --- SMART SCAN V2 LOGIC ---
+        let v2Queue = [];
+
+        async function handleV2Upload(files) {
+            console.log("handleV2Upload called with", files);
+            const statusDiv = document.getElementById('v2_upload_status');
+            statusDiv.innerText = "Analyse en cours... (Gemini Flash)";
+            statusDiv.style.color = "blue";
+
+            const ppc = document.getElementById('v2_pages_per_copy').value;
+            const defQuiz = document.getElementById('v2_default_quiz').value; // capture default
+            const selectedCourseId = document.getElementById('v2_course_selector').value;
+
+            // Simple error tracking within this batch
+            let hasError = false;
+            let count = 0;
+            const total = files.length;
+            const initialQueueLength = v2Queue.length;
+
+            // Clear previous logs if new batch, or append? Let's clear for clarity or just add divider.
+            statusDiv.innerHTML = "";
+            const logContainer = document.createElement('div');
+            logContainer.style.maxHeight = "150px";
+            logContainer.style.overflowY = "auto";
+            logContainer.style.fontSize = "0.9em";
+            logContainer.style.marginTop = "5px";
+            logContainer.style.border = "1px solid #ddd";
+            logContainer.style.padding = "5px";
+            statusDiv.appendChild(logContainer);
+
+            function addLog(msg, color = "black") {
+                const div = document.createElement('div');
+                div.textContent = msg;
+                div.style.color = color;
+                logContainer.appendChild(div);
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+
+            const delay = ms => new Promise(res => setTimeout(res, ms));
+
+            addLog(`Démarrage de l'analyse de ${total} fichier(s)...`, "blue");
+
+            for (let file of files) {
+                // Force UI update
+                await delay(50);
+
+                count++;
+                addLog(`📂 Fichier PDF [${count} sur ${total}] : ${file.name}`, "blue");
+                addLog(`   ⏳ Recherche des quiz (peut prendre du temps)...`, "#666");
+                logContainer.scrollTop = logContainer.scrollHeight;
+
+                // Another small delay to ensure the log is visible before fetch blocks (if it blocks)
+                await delay(50);
+
+                const fdSplit = new FormData();
+                fdSplit.append('file', file);
+                fdSplit.append('pages_per_copy', ppc);
+
+                try {
+                    // Step 1: Split
+                    addLog(`   ✂️ Découpage du fichier...`, "#666");
+                    const resSplit = await fetch('/api/scan/split', { method: 'POST', body: fdSplit });
+                    if (!resSplit.ok) throw new Error("Split Failed");
+                    const dataSplit = await resSplit.json();
+
+                    if (dataSplit.error) throw new Error(dataSplit.error);
+
+                    const chunks = dataSplit.chunks || [];
+                    addLog(`   ✅ ${chunks.length} copie(s) préparée(s). Analyse individuelle...`, "green");
+
+                    // Step 2: Analyze Loop
+                    for (let i = 0; i < chunks.length; i++) {
+                        const chunk = chunks[i];
+                        addLog(`      🔍 Analyse copie ${i + 1}/${chunks.length}...`, "blue");
+                        // Force UI update
+                        await delay(50);
+
+                        const fdChunk = new FormData();
+                        fdChunk.append('chunk_path', chunk.path);
+                        if (defQuiz) fdChunk.append('default_quiz_number', defQuiz);
+
+                        const resChunk = await fetch('/api/scan/analyze_chunk', { method: 'POST', body: fdChunk });
+                        const dataChunk = await resChunk.json();
+
+                        if (dataChunk.error) {
+                            addLog(`      ⚠️ Erreur copie ${i + 1}: ${dataChunk.error}`, "red");
+                            // Push error item
+                            v2Queue.push({
+                                id: Date.now() + "_" + i + "_err",
+                                file_id: chunk.name,
+                                filename: `${file.name} (Part ${i + 1})`,
+                                originalFile: file,
+                                analysis: { error: dataChunk.error },
+                                status: 'error',
+                                error: dataChunk.error
+                            });
+                        } else if (dataChunk.result) {
+                            const res = dataChunk.result;
+                            if (res.error) {
+                                addLog(`      ⚠️ Erreur copie ${i + 1}: ${res.error}`, "red");
+                                v2Queue.push({
+                                    id: Date.now() + "_" + i + "_err",
+                                    file_id: chunk.name,
+                                    filename: `${file.name} (Part ${i + 1})`,
+                                    originalFile: file,
+                                    analysis: res,
+                                    status: 'error',
+                                    error: res.error
+                                });
+                            } else {
+                                if (selectedCourseId) res.course_title = selectedCourseId;
+                                res.default_quiz_number_used = defQuiz;
+
+                                const stud = res.student_id ? `Étudiant ${res.student_id}` : "Étudiant inconnu";
+                                const qz = res.quiz_number ? `Quiz ${res.quiz_number}` : "Quiz inconnu";
+                                addLog(`      ✅ Copie ${i + 1} : ${stud} - ${qz}`, "green");
+
+                                v2Queue.push({
+                                    id: Date.now() + "_" + i + "_" + Math.random().toString(36).substr(2, 5),
+                                    file_id: res.file_id || chunk.name,
+                                    filename: `${file.name} (Part ${i + 1})`,
+                                    originalFile: file,
+                                    analysis: res,
+                                    status: 'ready'
+                                });
+                            }
+                        }
+                    }
+
+                } catch (e) {
+                    console.error(e);
+                    addLog(`  > Erreur ${file.name}: ${e.message}`, "red");
+                    hasError = true;
+                }
+            }
+
+            try {
+                renderV2Queue();
+                document.getElementById('v2_queue_container').style.display = 'block';
+            } catch (e) {
+                console.error("Render Error:", e);
+                addLog(`Erreur Affichage: ${e.message}`, "red");
+                hasError = true;
+            }
+
+            const addedCount = v2Queue.length - initialQueueLength;
+            addLog(`Terminé. Total copies ajoutées : ${addedCount}.`, hasError ? "orange" : "green");
+        }
+
+        function viewV2Scan(id) {
+            const item = v2Queue.find(i => i.id === id);
+            if (!item || !item.originalFile) return;
+            const url = URL.createObjectURL(item.originalFile);
+            window.open(url, '_blank');
+        }
+
+        function viewV2Quiz(id) {
+            const item = v2Queue.find(i => i.id === id);
+            if (!item) return;
+
+            // Prefer row-level override, then global selector
+            const courseId = item.analysis.course_title || document.getElementById('v2_course_selector').value;
+            const quizNum = item.analysis.quiz_number;
+            const studentId = item.analysis.student_id;
+
+            if (!courseId || !quizNum || !studentId) {
+                alert("Impossible d'ouvrir le questionnaire : Cours, ID Étudiant ou Numéro de Quiz manquant.");
+                return;
+            }
+
+            // Construct URL: /content/students/{student_id}/{course_id}/quiz_{quiz_number}/subject.pdf
+            const url = `/content/students/${studentId}/${courseId}/quiz_${quizNum}/subject.pdf`;
+            window.open(url, '_blank');
+        }
+
+        function translateConfidence(conf) {
+            if (!conf) return '-';
+            const c = String(conf).toLowerCase();
+            if (c.includes('high')) return '<span style="color:green; font-weight:bold;">Haute</span>';
+            if (c.includes('medium')) return '<span style="color:orange; font-weight:bold;">Moyenne</span>';
+            if (c.includes('low')) return '<span style="color:red; font-weight:bold;">Faible</span>';
+            return conf;
+        }
+
+        function renderV2Queue() {
+            const tbody = document.getElementById('v2_queue_body');
+            tbody.innerHTML = '';
+
+            v2Queue.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #eee';
+
+                // Checkbox
+                const check = document.createElement('input');
+                check.type = 'checkbox';
+                check.checked = item.status === 'ready';
+                check.onchange = (e) => {
+                    item.status = e.target.checked ? 'ready' : 'skip';
+                    updateV2ReadyCount();
+                };
+
+                if (item.status === 'error') {
+                    // Error Row
+                    tr.style.background = '#fef2f2';
+                    tr.innerHTML = `
+                        <td style="padding:8px;"><div id="chk_${item.id}"></div></td>
+                        <td style="padding:8px; font-size:0.9em;">
+                            ${item.filename}<br>
+                            <span style="color:red; font-weight:bold;">Erreur</span>
+                        </td>
+                        <td colspan="5" style="padding:8px; color:red;">
+                            ${item.error || (item.analysis && item.analysis.error) || 'Erreur inconnue'}
+                        </td>
+                        <td style="padding:8px;">
+                             <button class="btn" style="background:#ef4444; padding:2px 8px; font-size:0.8em;" onclick="removeV2Item('${item.id}')">X</button>
+                        </td>
+                     `;
+                    // Disable checkbox
+                    check.checked = false;
+                    check.disabled = true;
+                } else {
+                    // Normal Row
+
+                    // Quiz Color Logic
+                    let quizStyle = "width:60px;";
+                    const detected = item.analysis.detected_quiz_number;
+                    const final = item.analysis.quiz_number;
+                    const def = item.analysis.default_quiz_number_used;
+
+                    // If we detected something AND a default was provided AND they differ: RED
+                    // Note: 'detected' might be int or string, 'def' is string from input. Safe compare.
+                    if (detected && def && String(detected) !== String(def)) {
+                        quizStyle += " border: 2px solid red; color: red; font-weight: bold;";
+                    }
+
+                    // If no detection but default used, normal (maybe italic?)
+                    // Current logic: item.analysis.quiz_number IS the value being used.
+
+                    tr.innerHTML = `
+                    <td style="padding:8px;"><div id="chk_${item.id}"></div></td>
+                    <td style="padding:8px; font-size:0.9em;">
+                        ${item.filename}<br>
+                        <span style="color:${item.status === 'done' ? '#10b981' : '#888'}; font-size:0.8em;">
+                            ${item.status === 'done' ? '✓ Corrigé' : (item.status === 'grading' ? 'Correction...' : 'Wait...')}
+                        </span>
+                    </td>
+                    <td style="padding:8px;">
+                        <input type="text" value="${item.analysis.student_id || ''}" 
+                            onchange="updateV2Item('${item.id}', 'student_id', this.value)"
+                            style="width:60px;">
+                    </td>
+                    <td style="padding:8px;">
+                        <input type="number" value="${item.analysis.quiz_number || ''}" 
+                            onchange="updateV2Item('${item.id}', 'quiz_number', this.value)"
+                            style="${quizStyle}">
+                            ${detected && def && String(detected) !== String(def) ? '<br><small style="color:red">Détecté: ' + detected + '</small>' : ''}
+                    </td>
+                    <td style="padding:8px;">
+                         <!-- Course Title Select -->
+                         <select onchange="updateV2Item('${item.id}', 'course_title', this.value)" style="width:120px; padding:2px;">
+                             <option value="">Sélectionner...</option>
+                             ${Array.from(document.getElementById('v2_course_selector').options).map(opt => {
+                        if (opt.value === "") return ""; // Skip the default one to use our own
+                        const isSelected = (item.analysis.course_title === opt.value) ? 'selected' : '';
+                        return `<option value="${opt.value}" ${isSelected}>${opt.text}</option>`;
+                    }).join('')}
+                         </select>
+                    </td>
+                    <td style="padding:8px;">${translateConfidence(item.analysis.confidence)}</td>
+                    <td style="padding:8px; font-weight:bold; font-size:1.1em; color:${item.result ? '#10b981' : '#666'};">
+                        ${item.result ? (item.result.score !== undefined ? item.result.score + '/20' : 'Vérifiez') : '-'}
+                    </td>
+                    <td style="display:flex; gap:0.5rem; padding:8px;">
+                         <button class="btn" style="background:#3b82f6; padding:2px 8px; font-size:0.8em;" onclick="viewV2Scan('${item.id}')">Voir</button>
+                         <button class="btn" style="background:#8b5cf6; padding:2px 8px; font-size:0.8em;" onclick="viewV2Quiz('${item.id}')">Voir Questionnaire</button>
+                         <button class="btn" style="background:#ef4444; padding:2px 8px; font-size:0.8em;" onclick="removeV2Item('${item.id}')">X</button>
+                    </td>
+                `;
+                }
+
+                // Append checkbox manually to keep reference
+                tr.querySelector(`#chk_${item.id}`).appendChild(check);
+
+                if (item.status === 'grading') {
+                    tr.style.opacity = '0.5';
+                    tr.style.pointerEvents = 'none';
+                }
+
+                tbody.appendChild(tr);
+            });
+            updateV2ReadyCount();
+        }
+
+        function updateV2ReadyCount() {
+            const countReady = v2Queue.filter(i => i.status === 'ready').length;
+            const btnGrade = document.getElementById('v2_btn_grade');
+            const spanCount = document.getElementById('v2_count_ready');
+            if (btnGrade && spanCount) {
+                spanCount.innerText = countReady;
+                btnGrade.disabled = countReady === 0;
+            }
+        }
+
+        function updateV2Item(id, field, value) {
+            const item = v2Queue.find(i => i.id === id);
+            if (item) {
+                item.analysis[field] = value;
+            }
+        }
+
+        function removeV2Item(id) {
+            v2Queue = v2Queue.filter(i => i.id !== id);
+            renderV2Queue();
+        }
+
+        async function processV2Queue() {
+            document.getElementById('v2_btn_grade').disabled = true;
+
+            const globalCourseId = document.getElementById('v2_course_selector').value;
+            // Note: We might allow grading without course selection if ID is embedded, 
+            // but for now let's enforce selection or at least warn.
+            if (!globalCourseId) {
+                // We keep this check but we can relax it if rows have individual overrides.
+                // However, user usually selects one course for all.
+                // Let's rely on the row-check inside loop for maximum flexibility?
+                // Or force global at start?
+                // User asked for "pre-fill", so global likely set.
+                // We'll trust the loop check.
+            }
+
+            // Process sequentially
+            for (let item of v2Queue) {
+                if (item.status !== 'ready') continue;
+
+                item.status = 'grading';
+                renderV2Queue();
+
+                try {
+                    // Grading Config
+                    const customPrompt = document.getElementById('gradingPromptInput').value;
+
+                    // Prioritize row-level override, then global selector
+                    const targetCourseId = item.analysis.course_title || globalCourseId;
+
+                    if (!targetCourseId) {
+                        item.status = 'error';
+                        item.error = "Erreur: Cours non sélectionné";
+                        renderV2Queue();
+                        continue;
+                    }
+
+                    // Fixed: Payload to match VerifiedGradeRequest
+                    const payload = {
+                        file_id: item.file_id,
+                        student_id: item.analysis.student_id,
+                        quiz_number: parseInt(item.analysis.quiz_number),
+                        course_id: targetCourseId, // Use resolved course ID
+                        custom_prompt: customPrompt
+                    };
+
+                    const res = await fetch('/api/grade_scan_verified', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await res.json();
+                    if (res.ok) {
+                        item.status = 'done';
+                        item.result = data.result; // { score, feedback, ... }
+                    } else {
+                        item.status = 'error';
+                        item.error = data.detail;
+                    }
+
+                } catch (e) {
+                    item.status = 'error';
+                    item.error = e.message;
+                }
+                renderV2Queue();
+            }
+            document.getElementById('v2_btn_grade').disabled = false;
+            // Refresh gradebook if possible
+            if (typeof loadGradebook === 'function') loadGradebook();
+        }
+
+        // --- RESTORED LOGIC FROM INTERROPEDAGO_3 ---
+
+        async function createCourse() {
+            const name = document.getElementById('newCourseTitle').value;
+            if (!name) return alert("Nom du cours requis");
+
+            try {
+                const res = await fetch('/api/courses', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name, title: name, id: name.toLowerCase().replace(/[^a-z0-9]/g, '') })
+                });
+
+                if (res.ok) {
+                    showToast("Cours créé avec succès !", "green");
+                    loadCourses();
+                    document.getElementById('newCourseTitle').value = '';
+                } else {
+                    const data = await res.json();
+                    showToast("Erreur lors de la création: " + (data.detail || "Inconnue"), "red");
+                }
+            } catch (e) {
+                console.error(e);
+                showToast("Erreur réseau: " + e.message, "red");
+            }
+        }
+
+        async function loadCourseDetails() {
+            const select = document.getElementById('courseSelector');
+            const courseId = select.value;
+            const details = document.getElementById('courseDetails');
+
+            if (!courseId) {
+                details.style.display = 'none';
+                return;
+            }
+
+            // Fetch fresh course data
+            try {
+                const res = await fetch('/api/courses');
+                const courses = await res.json();
+                const course = courses.find(c => c.id === courseId);
+
+                if (!course) {
+                    alert("Erreur: Cours introuvable.");
+                    return;
+                }
+
+                details.style.display = 'block';
+
+                // Populate Settings
+                if (document.getElementById('startLine')) document.getElementById('startLine').value = course.start_line || 0;
+                if (document.getElementById('endLine')) document.getElementById('endLine').value = course.end_line || '';
+
+                // Populate Prompts
+                if (document.getElementById('genPromptInput')) document.getElementById('genPromptInput').value = course.custom_prompt || DEFAULT_PROMPT_GEN;
+                if (document.getElementById('gradingPromptInput')) document.getElementById('gradingPromptInput').value = course.custom_grading_prompt || DEFAULT_PROMPT_GRADING;
+                if (document.getElementById('summaryPromptInput')) document.getElementById('summaryPromptInput').value = course.custom_summary_prompt || DEFAULT_PROMPT_SUMMARY;
+                // gradingPromptInput is course specific, already loaded above.
+
+                // Update Next Quiz Label
+                const nextNum = (course.quiz_count || 0) + 1;
+                if (document.getElementById('nextQuizLabel')) document.getElementById('nextQuizLabel').innerText = `(Prochain: Quiz #${nextNum})`;
+                updateGenerateButtonText();
+
+                // Show Current File
+                const currentFileDiv = document.getElementById('currentLatexFile');
+                if (currentFileDiv) {
+                    if (course.latex_file_path) {
+                        const parts = course.latex_file_path.split(/[/\\]/);
+                        currentFileDiv.innerText = `Fichier actuel : ${parts[parts.length - 1]}`;
+                    } else {
+                        currentFileDiv.innerText = "Aucun fichier source ajouté.";
+                    }
+                }
+
+                // Load Gradebook
+                loadGradebook();
+                loadAttendance();
+
+            } catch (e) {
+                console.error("Error loading details:", e);
+            }
+        }
+
+        async function toggleEnrollment(studentId, courseId, globallyEnrolled) {
+            const course = globalCoursesData.find(c => c.id === courseId);
+            if (!course) return;
+
+            const executeEnrollment = async () => {
+                let currentEnrolled = course.enrolled_students || [];
+                if (globallyEnrolled) {
+                    currentEnrolled = currentEnrolled.filter(id => id !== studentId);
+                } else {
+                    if (!currentEnrolled.includes(studentId)) currentEnrolled.push(studentId);
+                }
+
+                try {
+                    const res = await fetch(`/api/courses/${courseId}/enrollments`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ student_ids: currentEnrolled })
+                    });
+
+                    if (res.ok) {
+                        await loadCourses();
+                        await loadStudentsGlobal();
+                        if (document.getElementById('courseSelector').value === courseId) {
+                            await loadCourseDetails();
+                        }
+                    } else {
+                        const err = await res.json();
+                        alert("Erreur: " + err.detail);
+                    }
+                } catch (e) {
+                    alert("Erreur réseau: " + e.message);
+                }
+            };
+
+            if (globallyEnrolled) {
+                openModal(
+                    "Confirmer la Désinscription",
+                    `Voulez-vous vraiment DÉSINSCRIRE ce candidat du cours <strong>${course.title}</strong> ?<br><br><small>Ses informations (notes, présences) ne seront PAS supprimées de la base de données, mais elles n'apparaîtront plus dans les tableaux de gestion de ce cours.</small>`,
+                    executeEnrollment,
+                    "Désinscrire",
+                    "#dc2626"
+                );
+            } else {
+                // Skiping confirmation for enrollment
+                await executeEnrollment();
+            }
+        }
+
+        async function deployToUniversity(mode) {
+            console.log("Triggering deployment with mode:", mode);
+            const label = mode === 'smart' ? 'Synchronisation Intelligente' : (mode === 'sftp' ? 'Serveur SFTP' : 'Synchronisation Complète');
+
+            if (mode === 'sftp') {
+                // SPECIAL FLOW FOR UNIVERSITY SERVER (Port Knocking)
+                // 1. Open Page
+                window.open("https://www.dil.univ-mrs.fr/portes/", "_blank");
+
+                // 2. Ask Confirmation
+                if (typeof openModal === 'function') {
+                    openModal(
+                        "🔒 Ouverture du Serveur requise",
+                        `Une page vient de s'ouvrir pour débloquer l'accès ("Port Knocking").<br>
+                         1. Connectez-vous sur cette page.<br>
+                         2. Attendez 5 secondes.<br>
+                         3. Revenez ici et cliquez sur <strong>Valider</strong>.`,
+                        async () => await performDeploy(mode, label),
+                        "✅ Port Ouvert : Lancer Sync",
+                        "#16a34a" // Green
+                    );
+                } else {
+                    // Fallback to simple confirm if modal isn't ready
+                    if (confirm("Une page s'est ouverte. L'avez-vous débloquée ?")) {
+                        await performDeploy(mode, label);
+                    }
+                }
+                return;
+            }
+
+            // Local Smart/Full
+            if (typeof openModal === 'function') {
+                openModal(
+                    "Confirmer le déploiement",
+                    `Lancer la <strong>${label}</strong> ?<br><br><small>Cela mettra à jour les données.</small>`,
+                    async () => await performDeploy(mode, label),
+                    "🚀 Déployer",
+                    "#2563eb"
+                );
+            } else {
+                if (confirm(`Lancer le déploiement ${mode} ?`)) {
+                    await performDeploy(mode, label);
+                }
+            }
+        }
+
+        async function performDeploy(mode, label) {
+            const dropBtn = document.querySelector('.dropdown button.btn[style*="7c3aed"]');
+            const originalText = dropBtn ? dropBtn.innerText : "🚀 Déployer ▼";
+
+            if (dropBtn) {
+                dropBtn.innerText = "⏳ En cours...";
+                dropBtn.disabled = true;
+            }
+
+            try {
+                const res = await fetch('/api/deploy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode: mode })
+                });
+
+                if (mode === 'sftp' && res.body) {
+                    const logOverlay = document.createElement('div');
+                    logOverlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:11000; display:flex; align-items:center; justify-content:center; flex-direction:column;";
+                    logOverlay.innerHTML = `
+                        <div style="background:#1e1e1e; color:#0f0; width:80%; height:80%; padding:20px; border-radius:8px; font-family:monospace; overflow-y:auto; white-space:pre-wrap;" id="liveLogContainer">Starting Sync...</div>
+                        <button class="btn" onclick="this.parentElement.remove(); location.reload();" style="margin-top:20px; background:#dc2626;">Fermer & Rafraîchir</button>
+                    `;
+                    document.body.appendChild(logOverlay);
+                    const container = document.getElementById('liveLogContainer');
+
+                    const reader = res.body.getReader();
+                    const decoder = new TextDecoder();
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        const chunk = decoder.decode(value);
+                        container.innerText += chunk;
+                        container.scrollTop = container.scrollHeight;
+                    }
+
+                    container.innerText += "\n=== TERMINE ===";
+                    if (dropBtn) { dropBtn.innerText = originalText; dropBtn.disabled = false; }
+                    return;
+                }
+
+                if (res.ok) {
+                    const data = await res.json();
+                    alert(`Déploiement (${mode}) réussi ! \n${data.message}`);
+                } else {
+                    const err = await res.json();
+                    alert("Erreur déploiement: " + (err.detail || "Inconnue"));
+                }
+            } catch (e) {
+                console.error("Deploy error:", e);
+                alert("Erreur réseau déploiement: " + e.message);
+            } finally {
+                if (dropBtn) {
+                    dropBtn.innerText = originalText;
+                    dropBtn.disabled = false;
+                }
+            }
+        }
+
+        async function saveSettingsAndPreview() {
+            const courseId = document.getElementById('courseSelector').value;
+            const start = document.getElementById('startLine').value;
+            const end = document.getElementById('endLine').value;
+
+            // 1. Save Settings
+            await fetch(`/api/courses/${courseId}/settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ start_line: start, end_line: end })
+            });
+
+            // 2. Fetch Preview
+            const prevContainer = document.getElementById('previewContainer');
+            prevContainer.style.display = 'block';
+            prevContainer.innerText = "Chargement...";
+
+            try {
+                const res = await fetch(`/api/courses/${courseId}/preview`);
+                const data = await res.json();
+                prevContainer.innerHTML = `
+                    <strong>Aperçu (${data.interval_count} lignes) :</strong><br>
+                    <pre style="background:#f9f9f9; padding:5px;">${data.preview}</pre>
+                `;
+            } catch (e) {
+                prevContainer.innerText = "Erreur: " + e.message;
+            }
+        }
+
+        // updateBankPromptNumber is removed since we use {num_questions} variable directly
+
+        function renderLatexText(text) {
+            if (!text) return "";
+            // Handle basic LaTeX formatting for UI display
+            let rendered = text;
+            // Handle \textit{...}
+            rendered = rendered.replace(/\\textit\{([\s\S]*?)\}/g, '<i>$1</i>');
+            // Handle \textbf{...}
+            rendered = rendered.replace(/\\textbf\{([\s\S]*?)\}/g, '<b>$1</b>');
+            // Handle \texttt{...}
+            rendered = rendered.replace(/\\texttt\{([\s\S]*?)\}/g, '<code style="background:#f3f4f6; padding:1px 4px; border-radius:3px; font-family:monospace;">$1</code>');
+            // Handle \\ (newline)
+            rendered = rendered.replace(/\\\\/g, '<br>');
+            return rendered;
+        }
+
+        async function generateQuestionBank() {
+            const courseId = document.getElementById('courseSelector').value;
+            const numQuestions = parseInt(document.getElementById('numQuestionsBank').value) || 10;
+            const promptText = document.getElementById('bankPromptInput').value;
+            const statusDiv = document.getElementById('questionBankStatus');
+            const container = document.getElementById('bankQuestionsContainer');
+            const actions = document.getElementById('bankActions');
+
+            if (!courseId) {
+                alert("Veuillez d'abord sélectionner un cours.");
+                return;
+            }
+            if (!promptText.trim()) {
+                alert("Le prompt ne peut pas être vide.");
+                return;
+            }
+
+            statusDiv.innerHTML = `<span style="color:blue;">⏳ Génération des questions en cours via Gemini... Veuillez patienter.</span>`;
+            container.innerHTML = "";
+            actions.style.display = "none";
+
+            try {
+                const res = await fetch(`/api/courses/${courseId}/generate_bank`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: promptText, num_questions: numQuestions })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || "Erreur lors de la génération");
+                }
+
+                const data = await res.json();
+                const questions = data.questions || [];
+
+                if (questions.length === 0) {
+                    statusDiv.innerHTML = `<span style="color:orange;">⚠️ Aucune question n'a été retournée par l'IA.</span>`;
+                    return;
+                }
+
+                statusDiv.innerHTML = `<span style="color:green;">✅ ${questions.length} questions générées !</span>`;
+                
+                questions.forEach((qText, index) => {
+                    const qDiv = document.createElement('div');
+                    qDiv.style.cssText = "border: 1px solid #ddd; padding: 12px; border-radius: 6px; background: #fff; display: flex; align-items: center; gap: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);";
+                    
+                    qDiv.dataset.questionText = qText;
+
+                    // Clean text for display (remove \item)
+                    const rawText = qText.replace(/^\\item\s*/, '');
+                    const displayText = renderLatexText(rawText);
+
+                    qDiv.innerHTML = `
+                        <input type="checkbox" checked style="width: 20px; height: 20px; cursor: pointer;">
+                        <div style="flex: 1; font-family: 'Inter', sans-serif;">
+                            <div style="font-weight: 600; color: #374151; margin-bottom: 4px;">Question ${index + 1}</div>
+                            <div style="color: #4b5563;">${displayText}</div>
+                        </div>
+                    `;
+                    container.appendChild(qDiv);
+                });
+                
+                actions.style.display = "block";
+
+                // Trigger MathJax to render formulas
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise([container]).catch((err) => console.log('MathJax error: ' + err.message));
+                }
+            } catch (e) {
+                statusDiv.innerHTML = `<span style="color:red;">❌ Erreur: ${e.message}</span>`;
+            }
+        }
+
+        async function saveSelectedQuestions() {
+            const courseId = document.getElementById('courseSelector').value;
+            const container = document.getElementById('bankQuestionsContainer');
+            const statusDiv = document.getElementById('questionBankStatus');
+            
+            const selectedQuestions = [];
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+            
+            checkboxes.forEach(cb => {
+                const qDiv = cb.parentElement;
+                selectedQuestions.push(qDiv.dataset.questionText);
+            });
+
+            if (selectedQuestions.length === 0) {
+                alert("Veuillez sélectionner au moins une question à sauvegarder.");
+                return;
+            }
+
+            statusDiv.innerHTML = `<span style="color:blue;">⏳ Sauvegarde en cours...</span>`;
+
+            try {
+                const res = await fetch(`/api/courses/${courseId}/question_bank`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ questions: selectedQuestions })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || "Erreur lors de la sauvegarde");
+                }
+
+                const data = await res.json();
+                statusDiv.innerHTML = `<span style="color:green;">✅ ${selectedQuestions.length} questions sauvegardées avec succès ! (Total dans la banque: ${data.total_questions})</span>`;
+            } catch (e) {
+                statusDiv.innerHTML = `<span style="color:red;">❌ Erreur lors de la sauvegarde: ${e.message}</span>`;
+            }
+        }
+
+        async function submitBankComments() {
+            const courseId = document.getElementById('courseSelector').value;
+            const container = document.getElementById('bankQuestionsContainer');
+            const statusDiv = document.getElementById('questionBankStatus');
+            const promptTemplate = document.getElementById('bankCommentsInput').value;
+            
+            const allQuestions = [];
+            // Select all question divs
+            const questionDivs = container.querySelectorAll('div[data-question-text]');
+            
+            questionDivs.forEach((qDiv, index) => {
+                allQuestions.push(`Question ${index + 1}:\n${qDiv.dataset.questionText}`);
+            });
+
+            if (allQuestions.length === 0) {
+                alert("Aucune question présente pour la regénération.");
+                return;
+            }
+
+            const questionsText = allQuestions.join("\n\n");
+            
+            // Replace {current_questions} in the prompt
+            let finalPrompt = promptTemplate.replace("{current_questions}", questionsText);
+            // Also support {selected_questions} just in case the user didn't update their old prompt text
+            finalPrompt = finalPrompt.replace("{selected_questions}", questionsText);
+
+            statusDiv.innerHTML = `<span style="color:blue;">⏳ Regénération des questions en cours via Gemini...</span>`;
+            
+            // Disable actions during generation
+            document.getElementById('bankActions').style.opacity = "0.5";
+            document.getElementById('bankActions').style.pointerEvents = "none";
+
+            try {
+                const res = await fetch(`/api/courses/${courseId}/generate_bank`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: finalPrompt, num_questions: allQuestions.length })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || "Erreur lors de la regénération");
+                }
+
+                const data = await res.json();
+                const questions = data.questions || [];
+
+                if (questions.length === 0) {
+                    statusDiv.innerHTML = `<span style="color:orange;">⚠️ Aucune question n'a été retournée par l'IA.</span>`;
+                    return;
+                }
+
+                statusDiv.innerHTML = `<span style="color:green;">✅ ${questions.length} questions mises à jour !</span>`;
+                
+                // Clear and recreate the container
+                container.innerHTML = "";
+                
+                questions.forEach((qText, index) => {
+                    const qDiv = document.createElement('div');
+                    qDiv.style.cssText = "border: 1px solid #ddd; padding: 12px; border-radius: 6px; background: #fff; display: flex; align-items: center; gap: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);";
+                    
+                    qDiv.dataset.questionText = qText;
+
+                    const rawText = qText.replace(/^\\item\s*/, '');
+                    const displayText = renderLatexText(rawText);
+
+                    qDiv.innerHTML = `
+                        <input type="checkbox" checked style="width: 20px; height: 20px; cursor: pointer;">
+                        <div style="flex: 1; font-family: 'Inter', sans-serif;">
+                            <div style="font-weight: 600; color: #374151; margin-bottom: 4px;">Question ${index + 1}</div>
+                            <div style="color: #4b5563;">${displayText}</div>
+                        </div>
+                    `;
+                    container.appendChild(qDiv);
+                });
+                
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise([container]).catch((err) => console.log('MathJax error: ' + err.message));
+                }
+                
+            } catch (e) {
+                statusDiv.innerHTML = `<span style="color:red;">❌ Erreur: ${e.message}</span>`;
+            } finally {
+                document.getElementById('bankActions').style.opacity = "1";
+                document.getElementById('bankActions').style.pointerEvents = "auto";
+            }
+        }
+
+        async function uploadLatex() {
+            const courseId = document.getElementById('courseSelector').value;
+            const file = document.getElementById('latexUpload').files[0];
+            if (!file) return;
+
+            const fd = new FormData();
+            fd.append('file', file);
+
+            document.getElementById('uploadStatus').innerText = "Uploading...";
+            await fetch(`/api/courses/${courseId}/upload`, { method: 'POST', body: fd });
+            document.getElementById('uploadStatus').innerText = "Done!";
+            loadCourseDetails(); // Refresh to show filename
+        }
+
+        // === GENERATION MODE MANAGEMENT ===
+        let currentGenMode = 'next_all'; // 'next_all', 'regen_all', 'individual'
+
+        function setGenMode(mode) {
+            currentGenMode = mode;
+            // Update tab visuals
+            const tabs = { next_all: 'tabNextAll', regen_all: 'tabRegenAll', individual: 'tabIndividual' };
+            for (const [key, tabId] of Object.entries(tabs)) {
+                const tab = document.getElementById(tabId);
+                if (key === mode) {
+                    tab.style.background = '#2563eb';
+                    tab.style.color = 'white';
+                } else {
+                    tab.style.background = '#e2e8f0';
+                    tab.style.color = '#374151';
+                }
+            }
+            // Show/hide individual options
+            const indivOptions = document.getElementById('individualOptions');
+            indivOptions.style.display = mode === 'individual' ? 'block' : 'none';
+
+            // Populate student dropdown if switching to individual
+            if (mode === 'individual') {
+                populateGenStudentSelect();
+            }
+            updateGenerateButtonText();
+        }
+
+        function updateGenerateButtonText() {
+            const courseId = document.getElementById('courseSelector').value;
+            const btn = document.getElementById('btnGenerate');
+            if (!btn) return;
+
+            if (!courseId || !globalCoursesById[courseId]) {
+                btn.innerText = "🚀 Lancer la Génération";
+                return;
+            }
+            const course = globalCoursesById[courseId];
+            
+            if (currentGenMode === 'next_all') {
+                const nextNum = (course.quiz_count || 0) + 1;
+                btn.innerText = `🚀 Lancer la génération du quiz ${nextNum}`;
+            } else if (currentGenMode === 'regen_all') {
+                const currentNum = course.quiz_count || 1;
+                btn.innerText = `🚀 Lancer la génération du quiz ${currentNum} (Régénération)`;
+            } else if (currentGenMode === 'individual') {
+                const indivNum = document.getElementById('genQuizNumber').value || "?";
+                btn.innerText = `🚀 Lancer la génération du quiz ${indivNum} (Individuel)`;
+            }
+        }
+
+        function populateGenStudentSelect() {
+            const courseId = document.getElementById('courseSelector').value;
+            if (!courseId) return;
+            const select = document.getElementById('genStudentSelect');
+            select.innerHTML = '<option value="">-- Choisir --</option>';
+
+            // Get enrolled students from global course data map
+            const course = globalCoursesById[courseId];
+            let enrolledIds = [];
+            if (course) {
+                enrolledIds = course.enrolled_students || [];
+            }
+
+            // Match with global students data
+            const students = globalStudentsData || [];
+            const enrolled = students.filter(s => enrolledIds.includes(s.id));
+            enrolled.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+
+            enrolled.forEach(s => {
+                const name = (s.last_name || s.first_name)
+                    ? `${s.id} - ${s.last_name || ''} ${s.first_name || ''}`.trim()
+                    : `${s.id}`;
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = name;
+                select.appendChild(opt);
+            });
+        }
+
+        async function handleGeneration() {
+            // Read inputs from Section 4
+            const nNew = parseInt(document.getElementById('genNumNew').value) || 0;
+            const nOld = parseInt(document.getElementById('genNumOld').value) || 0;
+
+            // Check if using saved bank (individual mode only)
+            const bankSource = document.querySelector('input[name="bankSource"]:checked')?.value || 'current';
+            const usingSavedBank = (currentGenMode === 'individual' && bankSource === 'saved_bank');
+
+            // Collect selected questions from Section 3
+            const container = document.getElementById('bankQuestionsContainer');
+            const selectedQuestionsList = [];
+            if (container) {
+                const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+                checkboxes.forEach((cb, index) => {
+                    const qDiv = cb.parentElement;
+                    selectedQuestionsList.push(`Question ${index + 1}:\n${qDiv.dataset.questionText}`);
+                });
+            }
+
+            // Validation (skip if using saved bank — questions will come from server)
+            if (!usingSavedBank) {
+                const nTotal = nNew + nOld;
+                if (selectedQuestionsList.length < nTotal) {
+                    alert(`Erreur: Vous demandez un total de ${nTotal} questions (${nNew} nouvelles + ${nOld} anciennes), mais seulement ${selectedQuestionsList.length} question(s) sont cochées dans la Section 3. Il en faut au moins ${nTotal} pour compenser l'absence éventuelle d'anciennes questions dans l'historique.`);
+                    return;
+                }
+            }
+
+            const selectedQuestionsStr = selectedQuestionsList.join("\n\n");
+
+            if (currentGenMode === 'individual') {
+                await generateSingleQuiz(selectedQuestionsStr, nNew, nOld);
+            } else {
+                await generateQuizzes(selectedQuestionsStr, nNew, nOld);
+            }
+        }
+
+        async function generateSingleQuiz(selectedQuestionsStr, nNew, nOld) {
+            const courseId = document.getElementById('courseSelector').value;
+            const studentId = document.getElementById('genStudentSelect').value;
+            const quizNumber = document.getElementById('genQuizNumber').value;
+            const customPrompt = document.getElementById('genPromptInput').value;
+            const specificInstructions = document.getElementById('specificInstructionsInput') ? document.getElementById('specificInstructionsInput').value : '';
+            const bankSource = document.querySelector('input[name="bankSource"]:checked')?.value || 'current';
+
+            if (!courseId) return alert("Sélectionnez un cours.");
+            if (!studentId) return alert("Sélectionnez un étudiant.");
+            if (!quizNumber) return alert("Entrez un numéro de quiz.");
+
+            document.getElementById('genStatus').innerText = "Génération individuelle en cours...";
+
+            // If using saved bank, fetch it from the server
+            let questionsToSend = selectedQuestionsStr;
+            if (bankSource === 'saved_bank') {
+                try {
+                    const bankRes = await fetch(`/api/courses/${courseId}/quiz_bank/${quizNumber}`);
+                    if (!bankRes.ok) {
+                        const err = await bankRes.json();
+                        alert(`Erreur: Impossible de charger la banque de questions du quiz ${quizNumber}. ${err.detail || ''}`);
+                        document.getElementById('genStatus').innerText = "";
+                        return;
+                    }
+                    const bankData = await bankRes.json();
+                    questionsToSend = bankData.selected_questions || "";
+                    // Also use n_new/n_old from the saved bank if available
+                    nNew = bankData.n_new ?? nNew;
+                    nOld = bankData.n_old ?? nOld;
+                } catch (e) {
+                    alert("Erreur réseau lors du chargement de la banque sauvegardée: " + e.message);
+                    document.getElementById('genStatus').innerText = "";
+                    return;
+                }
+            }
+
+            const payload = {
+                student_id: studentId,
+                quiz_number: parseInt(quizNumber),
+                custom_prompt: customPrompt,
+                specific_instructions: specificInstructions,
+                selected_questions: questionsToSend,
+                n_new: nNew,
+                n_old: nOld
+            };
+
+            try {
+                const response = await fetch(`/api/courses/${courseId}/generate_single`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("Erreur réseau ou serveur");
+                await handleGenerationStream(response);
+                await loadCourses();
+                updateGenerateButtonText();
+                loadGradebook();
+            } catch (e) {
+                document.getElementById('genStatus').innerText = "❌ Erreur: " + e.message;
+            }
+        }
+
+        async function generateQuizzes(selectedQuestionsStr, nNew, nOld) {
+            const courseId = document.getElementById('courseSelector').value;
+            const customPrompt = document.getElementById('genPromptInput').value;
+            const regenerate = (currentGenMode === 'regen_all');
+            const specificInstructions = document.getElementById('specificInstructionsInput') ? document.getElementById('specificInstructionsInput').value : '';
+
+            document.getElementById('genStatus').innerText = "Génération en cours... (Patientez)";
+
+            const payload = {
+                custom_prompt: customPrompt,
+                regenerate: regenerate,
+                specific_instructions: specificInstructions,
+                selected_questions: selectedQuestionsStr,
+                n_new: nNew,
+                n_old: nOld
+            };
+
+            try {
+                const response = await fetch(`/api/courses/${courseId}/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("Erreur réseau ou serveur");
+                await handleGenerationStream(response);
+                await loadCourses();
+                updateGenerateButtonText();
+                loadGradebook();
+            } catch (e) {
+                document.getElementById('genStatus').innerText = "❌ Erreur: " + e.message;
+            }
+        }
+
+        async function handleGenerationStream(response) {
+            if (response.headers.get('content-type') && response.headers.get('content-type').includes('application/x-ndjson')) {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let finalCount = 0;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+
+                    for (const line of lines) {
+                        if (!line.trim()) continue;
+                        try {
+                            const msg = JSON.parse(line);
+                            if (msg.type === 'progress') {
+                                document.getElementById('genStatus').innerHTML = `⏳ ${msg.message} (${msg.current}/${msg.total})`;
+                            } else if (msg.type === 'result') {
+                                finalCount = msg.count || 0;
+                                let html = `✅ Génération terminée ! ${finalCount} pdf(s) créé(s).`;
+                                if (msg.global_pdf_url) {
+                                    html += `<br><a href="${msg.global_pdf_url}" target="_blank" class="btn" style="display:inline-block; margin-top:10px; background:#059669; text-decoration:none; color:white;">📥 Afficher le PDF Global</a>`;
+                                }
+                                document.getElementById('genStatus').innerHTML = html;
+                            }
+                        } catch (e) {
+                            console.error("Stream Parse Error", e);
+                        }
+                    }
+                }
+                if (!document.getElementById('genStatus').innerHTML.includes('📥')) {
+                    document.getElementById('genStatus').innerText = `✅ Génération terminée ! ${finalCount} pdf(s) créé(s).`;
+                }
+            } else {
+                const data = await response.json();
+                let fallbackHtml = `✅ Génération terminée ! ${data.quizzes ? data.quizzes.length : ''} pdf(s) créé(s).`;
+                if (data.global_pdf_url) {
+                    fallbackHtml += `<br><a href="${data.global_pdf_url}" target="_blank" class="btn" style="display:inline-block; margin-top:10px; background:#059669; text-decoration:none; color:white;">📥 Afficher le PDF Global</a>`;
+                }
+                document.getElementById('genStatus').innerHTML = fallbackHtml;
+            }
+        }
+
+        // === ATTENDANCE FUNCTIONS ===
+        async function loadAttendance() {
+            const courseId = document.getElementById('courseSelector').value;
+            if (!courseId) return;
+
+            const div = document.getElementById('attendanceContainer');
+            div.innerHTML = "Chargement...";
+
+            try {
+                const res = await fetch(`/api/courses/${courseId}/attendance`);
+                const data = await res.json();
+
+                // Get enrolled students for this course
+                const coursesRes = await fetch('/api/courses');
+                const courses = await coursesRes.json();
+                const course = courses.find(c => c.id === courseId);
+                const enrolledIds = course ? (course.enrolled_students || []) : [];
+
+                // Get all students and filter to enrolled ones
+                const allStudents = globalStudentsData || [];
+                const students = allStudents.filter(s => enrolledIds.includes(s.id));
+
+                if (!data.sessions || data.sessions.length === 0) {
+                    div.innerHTML = "<i>Aucune séance enregistrée. Ajoutez une séance ci-dessus.</i>";
+                    return;
+                }
+
+                if (students.length === 0) {
+                    div.innerHTML = "<i>Aucun étudiant inscrit à ce cours.</i>";
+                    return;
+                }
+
+                let html = '<table class="table" style="font-size:0.9em; width:100%; text-align:center; border-collapse:separate; border-spacing:0;"><thead><tr><th style="text-align:left; position:sticky; left:0; background:#f3f4f6; z-index:2; min-width:150px;">Étudiant</th>';
+                data.sessions.forEach(s => {
+                    html += `<th>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>${s.date}<br><small>${s.time}</small></span>
+                            <button onclick="deleteSession('${s.id}', '${s.date}', '${s.time}')" style="background:none; border:none; cursor:pointer; color:#dc2626; font-size:1.1em; padding:0 4px;" title="Supprimer la séance">🗑️</button>
+                        </div>
+                    </th>`;
+                });
+                html += '</tr></thead><tbody>';
+
+                students.forEach(student => {
+                    const displayName = (student.last_name || student.first_name)
+                        ? `${student.last_name || ''} ${student.first_name || ''}`.trim()
+                        : `Candidat #${student.id}`;
+
+                    html += `<tr id="row_att_${student.id}"><td style="text-align:left; font-weight:bold; position:sticky; left:0; background:white; z-index:1; min-width:150px;">${displayName}</td>`;
+                    data.sessions.forEach(s => {
+                        const status = (data.records && data.records[student.id]) ? data.records[student.id][s.id] : "";
+                        const checkedP = status === "présent" ? "checked" : "";
+                        const checkedE = status === "excusé" ? "checked" : "";
+                        const checkedA = status === "absent" ? "checked" : "";
+
+                        const dataCheckedP = status === "présent" ? 'data-was-checked="true"' : 'data-was-checked="false"';
+                        const dataCheckedE = status === "excusé" ? 'data-was-checked="true"' : 'data-was-checked="false"';
+                        const dataCheckedA = status === "absent" ? 'data-was-checked="true"' : 'data-was-checked="false"';
+
+                        html += `<td>
+                            <label><input type="radio" name="att_${student.id}_${s.id}" value="présent" ${checkedP} ${dataCheckedP} onclick="toggleAttendance(this, '${student.id}', '${s.id}', 'présent')"> <span style="color:#059669; font-weight:bold;">P</span></label>
+                            <label style="margin-left:4px;"><input type="radio" name="att_${student.id}_${s.id}" value="excusé" ${checkedE} ${dataCheckedE} onclick="toggleAttendance(this, '${student.id}', '${s.id}', 'excusé')"> <span style="color:#ca8a04; font-weight:bold;">E</span></label>
+                            <label style="margin-left:4px;"><input type="radio" name="att_${student.id}_${s.id}" value="absent" ${checkedA} ${dataCheckedA} onclick="toggleAttendance(this, '${student.id}', '${s.id}', 'absent')"> <span style="color:#dc2626; font-weight:bold;">A</span></label>
+                        </td>`;
+                    });
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+                div.innerHTML = html;
+
+            } catch (e) {
+                div.innerHTML = `<span style="color:red">Erreur: ${e.message}</span>`;
+            }
+        }
+
+        // Auto-format date input as JJ/MM/AAAA
+        function formatDateInput(input) {
+            let v = input.value.replace(/[^0-9]/g, ''); // keep only digits
+            if (v.length > 8) v = v.slice(0, 8);
+            if (v.length >= 5) {
+                input.value = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+            } else if (v.length >= 3) {
+                input.value = v.slice(0, 2) + '/' + v.slice(2);
+            } else {
+                input.value = v;
+            }
+        }
+
+        // Convert JJ/MM/AAAA to YYYY-MM-DD
+        function parseDateFR(str) {
+            const parts = str.split('/');
+            if (parts.length !== 3 || parts[2].length !== 4) return null;
+            const [dd, mm, yyyy] = parts;
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        async function addSession() {
+            const courseId = document.getElementById('courseSelector').value;
+            const rawDate = document.getElementById('attDate').value;
+            const time = document.getElementById('attTime').value;
+
+            if (!courseId) return alert("Sélectionnez un cours d'abord.");
+            if (!rawDate || !time) return alert("Veuillez remplir la date et l'heure.");
+
+            const date = parseDateFR(rawDate);
+            if (!date) return alert("Format de date invalide. Utilisez JJ/MM/AAAA.");
+
+            try {
+                const res = await fetch(`/api/courses/${courseId}/attendance/session`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date, time })
+                });
+
+                if (res.ok) {
+                    loadAttendance();
+                    document.getElementById('attDate').value = "";
+                    document.getElementById('attTime').value = "";
+                } else {
+                    const error = await res.json();
+                    alert("Erreur: " + error.detail);
+                }
+            } catch (e) {
+                alert("Erreur réseau: " + e.message);
+            }
+        }
+
+        function toggleAttendance(radio, studentId, sessionId, status) {
+            if (radio.dataset.wasChecked === 'true') {
+                radio.checked = false;
+                radio.dataset.wasChecked = 'false';
+                updateAttendance(studentId, sessionId, '');
+            } else {
+                const group = document.getElementsByName(radio.name);
+                group.forEach(r => r.dataset.wasChecked = 'false');
+                radio.dataset.wasChecked = 'true';
+                updateAttendance(studentId, sessionId, status);
+            }
+        }
+
+        async function updateAttendance(studentId, sessionId, status) {
+            const courseId = document.getElementById('courseSelector').value;
+
+            const row = document.getElementById(`row_att_${studentId}`);
+            if (row) {
+                row.style.transition = 'background-color 0.4s ease';
+                row.style.backgroundColor = '#dcfce7'; // Light green
+
+                const stickyCell = row.querySelector('td');
+                if (stickyCell) {
+                    stickyCell.style.transition = 'background-color 0.4s ease';
+                    stickyCell.style.backgroundColor = '#dcfce7';
+                }
+
+                setTimeout(() => {
+                    row.style.backgroundColor = '';
+                    if (stickyCell) stickyCell.style.backgroundColor = 'white';
+                }, 3000);
+            }
+
+            try {
+                await fetch(`/api/courses/${courseId}/attendance/record`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_id: studentId, session_id: sessionId, status: status })
+                });
+            } catch (e) {
+                console.error("Erreur de sauvegarde de présence:", e);
+                if (row) {
+                    row.style.backgroundColor = '#fee2e2'; // Light red on error
+                    const stickyCell = row.querySelector('td');
+                    if (stickyCell) stickyCell.style.backgroundColor = '#fee2e2';
+
+                    setTimeout(() => {
+                        row.style.backgroundColor = '';
+                        if (stickyCell) stickyCell.style.backgroundColor = 'white';
+                    }, 2000);
+                }
+            }
+        }
+
+        async function deleteSession(sessionId, date, time) {
+            const courseId = document.getElementById('courseSelector').value;
+            if (!confirm(`Voulez-vous vraiment supprimer la colonne de présence du ${date} à ${time} ?\nToutes les présences enregistrées pour cette séance seront perdues.`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/courses/${courseId}/attendance/session/${sessionId}`, {
+                    method: 'DELETE'
+                });
+
+                if (res.ok) {
+                    loadAttendance();
+                } else {
+                    const error = await res.json();
+                    alert("Erreur lors de la suppression: " + error.detail);
+                }
+            } catch (e) {
+                alert("Erreur réseau: " + e.message);
+            }
+        }
+
+        async function loadGradebook() {
+            const courseId = document.getElementById('courseSelector').value;
+            if (!courseId) return;
+
+            const div = document.getElementById('gradebookContainer');
+            div.innerHTML = "Chargement...";
+
+            try {
+                const res = await fetch(`/api/courses/${courseId}/grades`);
+                const data = await res.json();
+                // Context: Backend returns { "quizzes": [1, 2, 3], "students": [ { "student_id": "...", "student_name": "...", "grades": { "1": { score: 15 }, "2": null } } ] }
+
+                if (!data.students || data.students.length === 0) {
+                    div.innerHTML = "Aucun étudiant ou aucune note.";
+                    return;
+                }
+
+                // Build Headers
+                let html = '<table class="table" style="font-size:0.9em;"><thead><tr><th>ID</th><th>Nom et Prénom</th>';
+
+                // Sort quizzes just in case
+                const quizzes = data.quizzes.sort((a, b) => a - b);
+                quizzes.forEach(q => {
+                    html += `<th>Quiz #${q}</th>`;
+                });
+
+                html += '<th>Moyenne</th></tr></thead><tbody>';
+
+                // Build Rows
+                // Sort students by student_id
+                data.students.sort((a, b) => a.student_id.localeCompare(b.student_id, undefined, { numeric: true }));
+
+                data.students.forEach(student => {
+                    const sglobal = globalStudentsData.find(s => s.id === student.student_id);
+                    let nomPrenom = sglobal ? `${sglobal.last_name || ''} ${sglobal.first_name || ''}`.trim() : (student.student_name || '');
+                    if (!nomPrenom) nomPrenom = `Candidat #${student.student_id}`;
+
+                    html += `<tr><td>${student.student_id}</td><td>${nomPrenom}</td>`;
+
+                    let total = 0;
+                    let count = 0;
+
+                    quizzes.forEach(q => {
+                        const qKey = String(q);
+                        const entry = student.grades[qKey];
+                        let cellContent = "-";
+
+                        if (entry && entry.score !== undefined) {
+                            cellContent = entry.score;
+                            total += parseFloat(entry.score);
+                            count++;
+
+                            // Highlight modified or specific rendering could go here
+                            if (entry.modified && entry.original_score !== undefined && entry.score != entry.original_score) {
+                                cellContent += ` <span style="font-size:0.8em; color:#6b7280;">(${entry.original_score})</span>`;
+                            }
+                        }
+                        let tdHtml = `<td>${cellContent}</td>`;
+                        if (entry && entry.score !== undefined) {
+                            let onclick = `window.open('/student_history?student_id=${student.student_id}&course_id=' + document.getElementById('courseSelector').value + '&quiz=${q}', '_blank')`;
+                            tdHtml = `<td style="cursor:pointer;" title="Ouvrir l'historique détaillé" onclick="${onclick}">${cellContent}</td>`;
+                        }
+                        html += tdHtml;
+                    });
+
+                    const avg = count > 0 ? (total / count).toFixed(1) : "-";
+                    html += `<td><strong>${avg}</strong></td></tr>`;
+                });
+
+                html += '</tbody></table>';
+
+                // Add container for chart (Plotly uses divs)
+                html += '<div style="margin-top:2rem; padding: 1rem; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;"><div id="gradeChart" style="width: 100%; height: 400px;"></div></div>';
+
+                div.innerHTML = html;
+
+                // --- Calculate stats & render chart ---
+                const avgData = [];
+                const stdDevData = [];
+                const labels = [];
+
+                quizzes.forEach(q => {
+                    labels.push("Quiz #" + q);
+                    const qKey = String(q);
+
+                    const scores = [];
+                    data.students.forEach(s => {
+                        const entry = s.grades[qKey];
+                        if (entry && entry.score !== undefined && entry.score !== null) {
+                            scores.push(parseFloat(entry.score));
+                        }
+                    });
+
+                    if (scores.length > 0) {
+                        const sum = scores.reduce((a, b) => a + b, 0);
+                        const mean = sum / scores.length;
+                        avgData.push(parseFloat(mean.toFixed(2)));
+
+                        const sqrDiff = scores.map(s => Math.pow(s - mean, 2));
+                        const variance = sqrDiff.reduce((a, b) => a + b, 0) / scores.length;
+                        const stdDev = Math.sqrt(variance);
+                        stdDevData.push(parseFloat(stdDev.toFixed(2)));
+                    } else {
+                        avgData.push(0);
+                        stdDevData.push(0);
+                    }
+                });
+
+                const plotData = [{
+                    x: labels,
+                    y: avgData,
+                    error_y: {
+                        type: 'data',
+                        array: stdDevData,
+                        visible: true,
+                        color: 'rgb(239, 68, 68)',
+                        thickness: 2,
+                        width: 6
+                    },
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    line: {
+                        color: 'rgb(59, 130, 246)',
+                        width: 3
+                    },
+                    marker: {
+                        size: 8,
+                        color: 'rgb(59, 130, 246)'
+                    },
+                    name: 'Moyenne'
+                }];
+
+                const plotLayout = {
+                    title: 'Évolution de la moyenne et écart-type',
+                    yaxis: {
+                        title: 'Note (/20)',
+                        range: [0, 21]
+                    },
+                    xaxis: {
+                        title: 'Quizzes'
+                    }
+                };
+
+                // Ensure the DOM has fully updated before rendering Plotly
+                requestAnimationFrame(() => {
+                    Plotly.newPlot('gradeChart', plotData, plotLayout);
+                });
+
+            } catch (e) {
+                console.error(e);
+                div.innerHTML = "Erreur chargement carnet: " + e.message;
+            }
+        }
+
+        async function saveSpecificPrompt(type) {
+            const courseId = document.getElementById('courseSelector').value;
+            if (!courseId) return alert("Veuillez d'abord sélectionner un cours.");
+
+            let key = "";
+            let val = "";
+            if (type === 'gen') {
+                key = "custom_prompt";
+                val = document.getElementById('genPromptInput').value;
+            } else if (type === 'grading') {
+                key = "custom_grading_prompt";
+                val = document.getElementById('gradingPromptInput').value;
+            } else if (type === 'summary') {
+                key = "custom_summary_prompt";
+                val = document.getElementById('summaryPromptInput').value;
+            }
+
+            try {
+                const res = await fetch(`/api/courses/${courseId}/settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [key]: val })
+                });
+                if (res.ok) {
+                    alert("✅ Prompt sauvegardé pour ce cours !");
+                } else {
+                    const err = await res.json();
+                    alert("❌ Erreur: " + err.detail);
+                }
+            } catch (e) {
+                alert("❌ Erreur technique: " + e.message);
+            }
+        }
+
+        async function deleteCourse() {
+            const courseId = document.getElementById('courseSelector').value;
+            if (!confirm("Supprimer " + courseId + " ?")) return;
+            await fetch(`/api/courses/${courseId}`, { method: 'DELETE' });
+            loadCourses();
+            document.getElementById('courseDetails').style.display = 'none';
+        }
+
+        async function createStudentsBatch() {
+            const startId = document.getElementById('batchStartId').value;
+            const count = document.getElementById('batchCount').value;
+            if (!startId || !count) {
+                showToast("Veuillez remplir les champs Départ et Nombre.", "#dc2626");
+                return;
+            }
+            const endId = parseInt(startId) + parseInt(count) - 1;
+            openModal(
+                "Création en lot",
+                `Créer <strong>${count}</strong> étudiants (ID ${startId} à ${endId}) ?`,
+                async () => {
+                    await fetch('/api/students/batch', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ start_id: parseInt(startId), count: parseInt(count) })
+                    });
+                    showToast(`${count} étudiants créés (${startId}–${endId}).`, '#10b981');
+                    loadStudentsGlobal();
+                },
+                "Créer",
+                "#0ea5e9"
+            );
+        }
+
+        async function generatePasswords() {
+            await fetch('/api/students/passwords/generate', { method: 'POST' });
+            loadStudentsGlobal();
+        }
+
+        async function addStudent() {
+            const sid = document.getElementById('newStudentId').value;
+            if (!sid) {
+                showToast("Veuillez entrer un ID étudiant.", "#dc2626");
+                return;
+            }
+            openModal(
+                "Ajouter un étudiant",
+                `Créer l'étudiant avec l'ID <strong>${sid}</strong> ?`,
+                async () => {
+                    await fetch('/api/students', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: sid })
+                    });
+                    showToast(`Étudiant ${sid} créé.`, '#10b981');
+                    document.getElementById('newStudentId').value = '';
+                    loadStudentsGlobal();
+                },
+                "Créer",
+                "#10b981"
+            );
+        }
+
+        async function deleteStudent(sid) {
+            openModal(
+                "Supprimer un étudiant",
+                `Voulez-vous vraiment supprimer l'étudiant <strong>${sid}</strong> et toutes ses données associées ?`,
+                async () => {
+                    await fetch(`/api/students/${sid}`, { method: 'DELETE' });
+                    showToast(`Étudiant ${sid} supprimé.`, '#10b981');
+                    loadStudentsGlobal();
+                },
+                "Supprimer",
+                "#dc2626"
+            );
+        }
+
+        function openEditModal(sid, nom, prenom, email) {
+            document.getElementById('editStudentId').value = sid;
+            document.getElementById('editStudentNom').value = nom || '';
+            document.getElementById('editStudentPrenom').value = prenom || '';
+            document.getElementById('editStudentEmail').value = email || '';
+
+            const modal = document.getElementById('editStudentModal');
+            modal.style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editStudentModal').style.display = 'none';
+        }
+
+        async function submitEditStudent() {
+            const sid = document.getElementById('editStudentId').value;
+            const newNom = document.getElementById('editStudentNom').value.trim();
+            const newPrenom = document.getElementById('editStudentPrenom').value.trim();
+            const newEmail = document.getElementById('editStudentEmail').value.trim();
+
+            if (!newNom && !newPrenom) {
+                alert("Nom ou Prénom sont requis.");
+                return;
+            }
+
+            try {
+                const payload = { last_name: newNom, first_name: newPrenom };
+                if (newEmail !== "") {
+                    payload.email = newEmail;
+                } else {
+                    payload.email = null;
+                }
+
+                await fetch(`/api/students/${sid}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                closeEditModal();
+                loadStudentsGlobal();
+                showToast("Étudiant mis à jour avec succès", "green");
+            } catch (e) {
+                alert("Erreur réseau lors de la modification de l'étudiant.");
+            }
+        }
+
+        async function importStudentsCsv(file) {
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/students/import_csv', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    showToast(`Import réussi : ${result.imported_count} étudiants ajoutés.`, "green");
+                    loadStudentsGlobal();
+                } else {
+                    alert("Erreur: " + result.detail);
+                }
+            } catch (e) {
+                alert("Erreur réseau lors de l'import.");
+            }
+            document.getElementById('csvUpload').value = '';
+        }
+
+        // --- INIT ---
+        (async function init() {
+            console.log("Initializing App (Step 4 Complete)...");
+            await loadCourses();
+            await loadStudentsGlobal();
+            await loadStudentLogin();
+            console.log("Init Complete.");
+        })();
+
+        async function viewCourseDocument() {
+            const courseId = document.getElementById('courseSelector').value;
+            if (!courseId) {
+                showToast("Veuillez d'abord sélectionner un cours.", "#dc2626");
+                return;
+            }
+
+            const wrapper = document.getElementById('courseDocumentWrapper');
+            const linesContainer = document.getElementById('courseDocumentLines');
+            const textContainer = document.getElementById('courseDocumentText');
+
+            // Toggle logic
+            if (wrapper.style.display === 'flex') {
+                wrapper.style.display = 'none';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/courses/${courseId}/source`);
+                if (!res.ok) {
+                    const err = await res.json();
+                    showToast("Erreur: " + (err.detail || "Impossible de récupérer le document."), "#dc2626");
+                    return;
+                }
+                const data = await res.json();
+                const content = data.content || "";
+
+                const linesCount = content.split('\n').length;
+                let linesHTML = '';
+                for (let i = 1; i <= linesCount; i++) {
+                    linesHTML += i + '<br>';
+                }
+
+                linesContainer.innerHTML = linesHTML;
+                textContainer.textContent = content;
+
+                wrapper.style.display = 'flex';
+
+                // Sync scrolling vertically
+                textContainer.addEventListener('scroll', () => {
+                    linesContainer.scrollTop = textContainer.scrollTop;
+                });
+
+            } catch (e) {
+                showToast("Erreur de connexion.", "#dc2626");
+            }
+        }
+
+        // Custom resizer logic for Course Document Viewer
+        let isResizingDocument = false;
+        const resizerHandle = document.getElementById('courseDocumentResizer');
+        const docWrapper = document.getElementById('courseDocumentWrapper');
+
+        if (resizerHandle && docWrapper) {
+            resizerHandle.addEventListener('mousedown', function (e) {
+                isResizingDocument = true;
+                document.body.style.userSelect = 'none'; // Prevent text selection
+            });
+
+            document.addEventListener('mousemove', function (e) {
+                if (!isResizingDocument) return;
+                const offsetTop = docWrapper.getBoundingClientRect().top;
+                let newHeight = e.clientY - offsetTop;
+                if (newHeight < 100) newHeight = 100; // minimum height
+                docWrapper.style.height = newHeight + 'px';
+            });
+
+            document.addEventListener('mouseup', function (e) {
+                isResizingDocument = false;
+                document.body.style.userSelect = '';
+            });
+        }
+
+        // --- PROMPT RESIZER (GENERIC) ---
+        function attachPromptResizer(resizerId, wrapperId) {
+            let isResizing = false;
+            const resizer = document.getElementById(resizerId);
+            const wrapper = document.getElementById(wrapperId);
+
+            if (resizer && wrapper) {
+                resizer.addEventListener('mousedown', function (e) {
+                    isResizing = true;
+                    document.body.style.userSelect = 'none';
+                });
+
+                document.addEventListener('mousemove', function (e) {
+                    if (!isResizing) return;
+                    const offsetTop = wrapper.getBoundingClientRect().top;
+                    let newHeight = e.clientY - offsetTop;
+                    if (newHeight < 100) newHeight = 100;
+                    wrapper.style.height = newHeight + 'px';
+                });
+
+                document.addEventListener('mouseup', function (e) {
+                    isResizing = false;
+                    document.body.style.userSelect = '';
+                });
+            }
+        }
+
+        attachPromptResizer('genPromptResizer', 'genPromptWrapper');
+        attachPromptResizer('gradingPromptResizer', 'gradingPromptWrapper');
+        attachPromptResizer('summaryPromptResizer', 'summaryPromptWrapper');
+    </script>
+</body>
+
+</html>

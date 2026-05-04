@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation Développeur - InterroPedago V6</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --primary-hover: #1e293b;
+            --secondary: #64748b;
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --text-main: #334155;
+            --border: #cbd5e1;
+            --code-bg: #1e293b;
+            --code-text: #e2e8f0;
+            --accent: #3b82f6;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 4px solid var(--accent);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+        }
+
+        nav.sidebar {
+            position: sticky;
+            top: 2rem;
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            height: fit-content;
+            max-height: calc(100vh - 4rem);
+            overflow-y: auto;
+        }
+
+        nav.sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        nav.sidebar li {
+            margin-bottom: 0.8rem;
+        }
+
+        nav.sidebar a {
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: bold;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        nav.sidebar a:hover {
+            background-color: var(--bg);
+            color: var(--accent);
+        }
+
+        main.content {
+            background: var(--surface);
+            padding: 2.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        h2 {
+            color: var(--primary);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.5rem;
+            margin-top: 3rem;
+        }
+
+        h2:first-child { margin-top: 0; }
+        
+        h3 {
+            color: var(--accent);
+            margin-top: 2rem;
+        }
+
+        .endpoint {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: #e2e8f0;
+            border-bottom: 1px solid var(--border);
+            font-weight: bold;
+        }
+
+        .method {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            color: white;
+            margin-right: 1rem;
+            font-size: 0.85rem;
+        }
+        .method.get { background: #10b981; }
+        .method.post { background: #3b82f6; }
+        .method.patch { background: #f59e0b; }
+        .method.delete { background: #ef4444; }
+
+        .endpoint-body {
+            padding: 1rem;
+        }
+
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        code {
+            font-family: inherit;
+        }
+
+        .inline-code {
+            background: #e2e8f0;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #b91c1c;
+        }
+
+        .badge {
+            background: var(--secondary);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-left: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            nav.sidebar { position: static; max-height: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>[DEV] InterroPedago V6</h1>
+        <p>Technical Architecture, API Reference, and Data Schema</p>
+    </header>
+
+    <div class="container">
+        <nav class="sidebar">
+            <h3 style="margin-top: 0; color:var(--text-main);">Index</h3>
+            <ul>
+                <li><a href="#stack">1. Tech Stack & Architecture</a></li>
+                <li><a href="#data-schema">2. Data Schema (JSON)</a></li>
+                <li><a href="#api-students">3. API: Students</a></li>
+                <li><a href="#api-courses">4. API: Courses</a></li>
+                <li><a href="#api-generation">5. API: Generation (LLM)</a></li>
+                <li><a href="#api-grading">6. API: Grading (OCR/LLM)</a></li>
+                <li><a href="#streaming">7. SSE & Streaming Patterns</a></li>
+                <li><a href="#deployment">8. Deployment Scripts</a></li>
+                <li><a href="#setup">9. Local Setup & Installation</a></li>
+                <li><a href="#modules">10. Python Modules Breakdown</a></li>
+                <li><a href="#prompts">11. Prompt Engineering Specifics</a></li>
+                <li><a href="#frontend-logic">12. Complex Frontend Logic</a></li>
+                <li><a href="#student-server">13. Student Server & Chatbot</a></li>
+                <li><a href="#data-flow">14. Data Flow (Sequence Diagrams)</a></li>
+                <li><a href="#troubleshooting">15. Troubleshooting Guide</a></li>
+                <li><a href="#extending">16. Extending the System</a></li>
+            </ul>
+            <hr style="margin:2rem 0; border:1px solid #e2e8f0;">
+            <div style="text-align: center;">
+                <a href="/static/doc.html" style="background:var(--accent); color:white; border-radius:4px; text-align:center;">← Retour User Doc</a>
+            </div>
+        </nav>
+
+        <main class="content">
+            
+            <section id="stack">
+                <h2>1. Tech Stack & Architecture</h2>
+                <p>InterroPedago is designed to be highly portable and serverless-friendly, operating entirely on flat files without requiring a SQL/NoSQL engine.</p>
+                <ul>
+                    <li><strong>Backend Framework:</strong> <span class="inline-code">FastAPI</span> (Python 3.10+) running on Uvicorn.</li>
+                    <li><strong>Frontend:</strong> Vanilla HTML/CSS/JS. No bundlers (Webpack/Vite) required. Served statically by FastAPI via <span class="inline-code">StaticFiles</span>.</li>
+                    <li><strong>Database:</strong> Custom JSON-based ORM (<span class="inline-code">backend/database.py</span>). File I/O operations act as the transactional layer.</li>
+                    <li><strong>AI Provider:</strong> Google Gemini API (<span class="inline-code">google-generativeai</span>). Specifically using <span class="inline-code">gemini-3.1-pro-preview</span> for multi-modal context parsing.</li>
+                    <li><strong>LaTeX Compilation:</strong> Shell calls to <span class="inline-code">pdflatex</span>. Requires a working TeX Live distribution on the host server.</li>
+                </ul>
+            </section>
+
+            <section id="data-schema">
+                <h2>2. Data Schema (Flat Files)</h2>
+                <p>The <span class="inline-code">data/</span> directory is mounted as a static directory for serving generated PDFs and parsed scans.</p>
+                <pre>
+data/
+├── global/
+│   ├── students.json     # Registry of all students [{id, name, password, ...}]
+│   ├── courses.json      # Registry of all courses [{id, title, enrolled_students, ...}]
+│   └── quizzes.json      # Global index of generated quizzes
+├── courses/
+│   └── {course_id}/
+│       ├── {course_name}.tex            # Original source file
+│       ├── question_bank.json           # Validated LLM-generated questions
+│       ├── quiz_{n}_selected_bank.json  # Snapshot of questions used for quiz N
+│       ├── quiz_{n}_summary.md          # Generated global synthesis
+│       └── attendance.json              # Course attendance matrix
+└── students/
+    └── {student_id}/
+        ├── history.json                 # Fast-access history for the Chatbot
+        └── {course_id}/
+            └── quiz_{n}/
+                ├── subject.pdf          # Generated unique subject
+                ├── scan.pdf             # Uploaded student copy
+                └── correction.json      # Smart Grading JSON output (grades & feedback)
+                </pre>
+            </section>
+
+            <section id="api-students">
+                <h2>3. API Reference: Students</h2>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header"><span class="method get">GET</span> /api/students</div>
+                    <div class="endpoint-body">
+                        <p>Returns the list of all students augmented with calculated stats (absences, average_grade, course_stats) computed on the fly from the gradebooks.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header"><span class="method post">POST</span> /api/students/import_csv</div>
+                    <div class="endpoint-body">
+                        <p>Accepts a <span class="inline-code">multipart/form-data</span> upload containing a CSV. Parses delimiter automatically (;, , \t). Deduplicates homonyms by appending suffixes like <span class="inline-code">(2)</span>.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="api-courses">
+                <h2>4. API Reference: Courses</h2>
+
+                <div class="endpoint">
+                    <div class="endpoint-header"><span class="method post">POST</span> /api/courses/{course_id}/settings</div>
+                    <div class="endpoint-body">
+                        <p>Updates the course configuration including the active LaTeX bounds (<span class="inline-code">start_line</span>, <span class="inline-code">end_line</span>) and specific prompts (generation, grading, summary).</p>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header"><span class="method get">GET</span> /api/courses/{course_id}/preview</div>
+                    <div class="endpoint-body">
+                        <p>Returns a preview of the LaTeX source code based on the current bounds, injecting line numbers dynamically for the frontend to render.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="api-generation">
+                <h2>5. API Reference: Generation (LLM)</h2>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header"><span class="method post">POST</span> /api/courses/{course_id}/generate <span class="badge">NDJSON Stream</span></div>
+                    <div class="endpoint-body">
+                        <p>Triggers the personalized quiz generation pipeline for all enrolled students.</p>
+                        <p><strong>Payload:</strong> <span class="inline-code">{"n_new": 2, "n_old": 2, "selected_questions": "[...]", "regenerate": false}</span></p>
+                        <p><strong>Response:</strong> Streaming <span class="inline-code">application/x-ndjson</span>. Yields progress events, followed by a final result event with the global compiled PDF URL.</p>
+                        <pre>
+// Example Stream Output:
+{"type": "progress", "current": 1, "total": 20, "message": "Generating for 1234..."}
+...
+{"type": "result", "count": 20, "global_pdf_url": "/content/courses/math/all_quizzes_3.pdf"}</pre>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header"><span class="method post">POST</span> /api/courses/{course_id}/generate_bank</div>
+                    <div class="endpoint-body">
+                        <p>Synchronous endpoint. Sends the course segment and bank prompt to Gemini to extract <span class="inline-code">num_questions</span> formatted as LaTeX <span class="inline-code">\item</span> blocks.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="api-grading">
+                <h2>6. API Reference: Grading (OCR/LLM)</h2>
+
+                <div class="endpoint">
+                    <div class="endpoint-header"><span class="method post">POST</span> /api/grading/smart <span class="badge">NDJSON Stream (Bulk)</span></div>
+                    <div class="endpoint-body">
+                        <p>Handles the core "Smart Grading" logic.</p>
+                        <p>If <span class="inline-code">is_bulk=true</span>, the backend uses <span class="inline-code">pypdf</span> to chunk the uploaded PDF into blocks of <span class="inline-code">pages_per_copy</span>.</p>
+                        <p><strong>Flow:</strong></p>
+                        <ol>
+                            <li>OCR Identification (Gemini): Extracts Student ID and Quiz Number.</li>
+                            <li>Database Lookup: Retrieves the specific PDF subject generated for this student.</li>
+                            <li>Multi-modal Grading (Gemini): The model is fed both PDFs (Subject + Scan) and asked to extract transcription and provide feedback.</li>
+                        </ol>
+                        <p>To avoid event loop blocking during long LLM calls, the grading process is wrapped in <span class="inline-code">fastapi.concurrency.run_in_threadpool</span>.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="streaming">
+                <h2>7. Streaming Patterns (NDJSON)</h2>
+                <p>Due to the high latency of LLM calls, standard HTTP responses lead to frontend timeouts. V6 implements Newline Delimited JSON (NDJSON) via <span class="inline-code">StreamingResponse</span>.</p>
+                <p>The frontend parses the stream using the Fetch API and <span class="inline-code">TextDecoderStream</span>:</p>
+                <pre>
+const response = await fetch(url, { ... });
+const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+
+while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    const lines = value.split('\n').filter(l => l.trim() !== '');
+    for (const line of lines) {
+        const data = JSON.parse(line);
+        // Handle data.type == "progress" or "result"
+    }
+}</pre>
+            </section>
+
+            <section id="deployment">
+                <h2>8. Deployment & Sync</h2>
+                <p>The backend includes an <span class="inline-code">/api/sync</span> endpoint (used by the <i>Déployer</i> dropdown) which accepts a ZIP payload and a JSON list of deletions.</p>
+                <p>It acts as a rudimentary CI/CD pipeline, unzipping the payload directly into the active <span class="inline-code">data/</span> directory (or codebase directory) to update the remote university server without requiring SSH access.</p>
+            </section>
+
+            <section id="setup">
+                <h2>9. Local Setup & Installation</h2>
+                <p>To run the InterroPedago V6 environment locally for development:</p>
+                <ol>
+                    <li><strong>Python Version:</strong> Ensure Python 3.10+ is installed.</li>
+                    <li><strong>System Dependencies:</strong> Install <span class="inline-code">texlive-full</span> (or equivalent) for LaTeX compilation.
+                        <pre>sudo apt-get install texlive-full</pre>
+                    </li>
+                    <li><strong>API Key:</strong> Create a file named <span class="inline-code">Gemini_key</span> in the root of the <span class="inline-code">teacher</span> and <span class="inline-code">student</span> directories, containing only your Google Gemini API key. Alternatively, export it as an environment variable <span class="inline-code">GEMINI_API_KEY</span>.</li>
+                    <li><strong>Dependencies:</strong> Install the Python requirements.
+                        <pre>pip install fastapi uvicorn google-generativeai pypdf python-multipart json-repair</pre>
+                    </li>
+                    <li><strong>Running the Servers:</strong> Execute the startup scripts from their respective directories.
+                        <pre>cd teacher && ./run_server.sh
+# In another terminal:
+cd student && ./run_server.sh</pre>
+                    </li>
+                </ol>
+            </section>
+
+            <section id="modules">
+                <h2>10. Python Modules Breakdown</h2>
+                <p>The backend logic is split into several focused modules located in <span class="inline-code">backend/</span>:</p>
+                <ul>
+                    <li><span class="inline-code">main.py</span>: The FastAPI application entry point. Defines all API routes, mounts static directories, and orchestrates calls to other modules.</li>
+                    <li><span class="inline-code">database.py</span>: A custom JSON ORM. Handles thread-safe (or semi-safe) reads/writes to the <span class="inline-code">data/</span> directory files (students, courses, history). Contains functions like <span class="inline-code">get_all_students()</span>, <span class="inline-code">save_course()</span>, etc.</li>
+                    <li><span class="inline-code">generator.py</span>: Handles the LLM integration for quiz and bank generation. It constructs the prompts, calls the Gemini API, and uses <span class="inline-code">latex_utils.py</span> to compile the resulting LaTeX code into PDFs.</li>
+                    <li><span class="inline-code">grader.py</span>: Implements the Smart Grading logic. Orchestrates the OCR phase (identifying the student from the scan) and the grading phase (sending the scan and subject to Gemini for evaluation).</li>
+                    <li><span class="inline-code">gradebook.py</span>: Manages the extraction and aggregation of grades from the decentralized <span class="inline-code">correction.json</span> files into matrix formats suitable for the frontend display.</li>
+                    <li><span class="inline-code">chatbot.py</span>: Contains the logic for the student-facing AI tutor. It injects the student's specific history into the system prompt to provide contextual pedagogical help.</li>
+                    <li><span class="inline-code">latex_utils.py</span>: Utility functions for interacting with the system's <span class="inline-code">pdflatex</span> command, handling temporary directories, escaping strings, and managing compilation errors.</li>
+                </ul>
+            </section>
+
+            <section id="prompts">
+                <h2>11. Prompt Engineering Specifics</h2>
+                <p>The system's intelligence relies heavily on specific prompts. Here are the core architectures of the default prompts:</p>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">Quiz Generation Prompt (<span class="inline-code">generator.py</span>)</div>
+                    <div class="endpoint-body">
+                        <p><strong>Variables Injected:</strong> <span class="inline-code">{history}</span>, <span class="inline-code">{context}</span>, <span class="inline-code">{selected_questions}</span>, <span class="inline-code">{n_new}</span>, <span class="inline-code">{n_old}</span>, <span class="inline-code">{n_total}</span>.</p>
+                        <p><strong>Key Directives:</strong></p>
+                        <ul>
+                            <li>"RETURN ONLY THE LATEX CODE inside the enumerate."</li>
+                            <li>"CRITICAL: NO ANSWER BOXES, NO FRAMES... Do not leave space or lines for the student to write their answer."</li>
+                            <li>"ENSURE EACH QUESTION IS IN ENGLISH AND FRENCH."</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">Smart Grading Prompt (<span class="inline-code">grader.py</span>)</div>
+                    <div class="endpoint-body">
+                        <p><strong>Context Files:</strong> The generated Subject PDF (File 1) and the Student's Scan (File 2).</p>
+                        <p><strong>Key Directives:</strong></p>
+                        <ul>
+                            <li>"Transcribe the student's answer for each question."</li>
+                            <li>"Assign a score /20 (or as specified)."</li>
+                            <li>"Output JSON with strict schema: <span class="inline-code">grades [{question_number, transcription, score, feedback}]</span>."</li>
+                        </ul>
+                        <p><i>Note: The backend uses the <span class="inline-code">json-repair</span> library to handle occasional hallucinated characters outside the JSON block.</i></p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="frontend-logic">
+                <h2>12. Complex Frontend Logic</h2>
+                <div class="feature-card">
+                    <h3>Dynamic Resizers</h3>
+                    <p>The LaTeX viewer and Prompt Editors feature draggable resize bars. This is implemented via native Javascript mouse events (<span class="inline-code">mousedown</span>, <span class="inline-code">mousemove</span>, <span class="inline-code">mouseup</span>) attached to the <span class="inline-code">#courseDocumentResizer</span> and <span class="inline-code">.resizer-bar</span> elements. The <span class="inline-code">mousemove</span> event dynamically adjusts the <span class="inline-code">height</span> or <span class="inline-code">flex-basis</span> of the parent container.</p>
+                    
+                    <h3>LaTeX Rendering</h3>
+                    <p>When the user clicks "👁️ Prévisualiser", the frontend fetches the raw text from the backend's <span class="inline-code">/preview</span> endpoint. It does <strong>not</strong> compile it to PDF. Instead, it renders the raw text in a <span class="inline-code">&lt;pre&gt;</span> tag and relies on <span class="inline-code">MathJax</span> (loaded via CDN in the <span class="inline-code">&lt;head&gt;</span>) to asynchronously parse and render any inline (<span class="inline-code">$...$</span>) or block (<span class="inline-code">$$...$$</span>) equations.</p>
+
+                    <h3>State Management</h3>
+                    <p>Since the application is vanilla JS, state is often maintained in DOM elements (e.g., hidden inputs like <span class="inline-code">#courseSelector</span>) or simple global variables. The <span class="inline-code">loadGradebook()</span> and <span class="inline-code">loadAttendance()</span> functions completely rebuild their respective HTML tables upon successful fetch requests, ensuring the UI remains synchronized with the backend data.</p>
+                </div>
+            </section>
+
+            <section id="student-server">
+                <h2>13. Architecture: Student Server & Chatbot</h2>
+                <p>The student application (<span class="inline-code">student_server</span>) runs on a separate Uvicorn instance (port 8001) to isolate student access from the teacher dashboard.</p>
+                <div class="feature-card success">
+                    <h3>Authentication</h3>
+                    <p>Students log in using their ID and the generated password. Authentication is session-based (via cookies) or handled locally in the frontend depending on the setup. The server verifies credentials against <span class="inline-code">data/global/students.json</span>.</p>
+                    
+                    <h3>The AI Chatbot Logic</h3>
+                    <p>The chatbot (<span class="inline-code">student/backend/chatbot.py</span>) is not a generic LLM. It is heavily contextualized.</p>
+                    <ol>
+                        <li>When a student opens the chat, the system loads their <span class="inline-code">history.json</span>, which contains a record of all past quizzes, the student's specific answers, the grades, and the teacher/AI feedback.</li>
+                        <li>This history is injected into the Gemini System Prompt.</li>
+                        <li>If a student asks "Why did I fail question 2 last week?", the AI has direct access to the exact text they wrote and the correction applied, allowing it to act as a highly personalized tutor.</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section id="data-flow">
+                <h2>14. Data Flow (Sequence Diagrams)</h2>
+                <p>Visual representation of complex asynchronous operations.</p>
+
+                <h3>A. Question Bank Generation Flow</h3>
+                <div class="mermaid">
+                sequenceDiagram
+                    participant T as Teacher (Browser)
+                    participant F as FastAPI (main.py)
+                    participant G as Generator (generator.py)
+                    participant AI as Gemini API
+                    participant DB as Database (JSON)
+
+                    T->>F: POST /api/courses/{id}/generate_bank
+                    F->>G: generate_question_bank(course_content, bounds, comment)
+                    G->>AI: Send Prompt + Course Segment + Teacher Comment
+                    AI-->>G: Return Questions (LaTeX Items)
+                    G->>DB: Save to question_bank.json
+                    G-->>F: Return parsed questions array
+                    F-->>T: JSON Response (Questions list)
+                </div>
+                
+                <h3 style="margin-top: 2rem;">B. Quiz Generation Flow (Per Student)</h3>
+                <div class="mermaid">
+                sequenceDiagram
+                    participant T as Teacher (Browser)
+                    participant F as FastAPI (main.py)
+                    participant G as Generator (generator.py)
+                    participant AI as Gemini API
+                    participant L as LaTeX Util (pdflatex)
+
+                    T->>F: POST /api/courses/{id}/generate
+                    F->>T: Open NDJSON Stream
+                    loop For each student
+                        F->>G: generate_student_quiz(student_id)
+                        G->>AI: Send Prompt + Context + History
+                        AI-->>G: Return LaTeX Questions
+                        G->>L: compile_latex(student_latex)
+                        L-->>G: Return subject.pdf
+                        G-->>F: Yield progress
+                        F-->>T: Stream progress event
+                    end
+                    F->>L: merge_all_pdfs()
+                    L-->>F: Return global_quizzes.pdf
+                    F-->>T: Stream result event
+                </div>
+
+                <h3 style="margin-top: 2rem;">C. Smart Grading Flow</h3>
+                <div class="mermaid">
+                sequenceDiagram
+                    participant T as Teacher (Browser)
+                    participant F as FastAPI (main.py)
+                    participant GR as Grader (grader.py)
+                    participant AI as Gemini API
+                    participant DB as Database (JSON)
+
+                    T->>F: POST /api/grading/smart (upload pdfs)
+                    F->>T: Open NDJSON Stream
+                    loop For each chunked scan
+                        F->>GR: grade_submission(scan.pdf)
+                        GR->>AI: Prompt: Extract ID & Quiz Num
+                        AI-->>GR: Returns {"student_id": "1234", "quiz": 3}
+                        GR->>DB: Fetch quiz_3/subject.pdf for 1234
+                        DB-->>GR: Return subject.pdf
+                        GR->>AI: Prompt: Grade Scan.pdf based on Subject.pdf
+                        AI-->>GR: Returns JSON {"grades": [...]}
+                        GR->>DB: Save correction.json
+                        GR-->>F: Yield progress
+                        F-->>T: Stream progress event
+                    end
+                </div>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>15. Troubleshooting Guide & Error Handling</h2>
+                <div class="feature-card warning">
+                    <h3>1. LaTeX Compilation Errors</h3>
+                    <p><strong>Symptom:</strong> Generation stops midway, or PDF is not created.</p>
+                    <p><strong>Cause:</strong> The AI generated invalid LaTeX syntax (e.g., unescaped characters like <span class="inline-code">#</span> or <span class="inline-code">&</span> inside equations).</p>
+                    <p><strong>Fix:</strong> Check <span class="inline-code">teacher/teacher_server.log</span> for the raw <span class="inline-code">pdflatex</span> output. Adjust the "Prompt de Génération" to explicitly instruct Gemini to escape specific characters, or modify <span class="inline-code">latex_utils.py</span> to run a regex cleaning function before compilation.</p>
+                    
+                    <h3>2. Gemini API Rate Limits (429 Too Many Requests)</h3>
+                    <p><strong>Symptom:</strong> Stream fails with "Quota Exceeded" or "Resource Exhausted".</p>
+                    <p><strong>Fix:</strong> The Smart Grading and Generation loops might be hitting the API too fast. Implement <span class="inline-code">asyncio.sleep(2)</span> between iterations in <span class="inline-code">main.py</span> loops, or upgrade the Google Cloud project to a paid tier to increase RPM (Requests Per Minute).</p>
+
+                    <h3>3. JSON Parsing Failures from LLM</h3>
+                    <p><strong>Symptom:</strong> <span class="inline-code">json.decoder.JSONDecodeError</span> during grading.</p>
+                    <p><strong>Fix:</strong> Gemini sometimes outputs markdown blocks (<span class="inline-code">```json ... ```</span>) or prepends conversational text. The backend already uses <span class="inline-code">json-repair</span> to mitigate this. If it still fails, reinforce the prompt: "Return ONLY the raw JSON. Absolutely no other text."</p>
+                </div>
+            </section>
+
+            <section id="extending">
+                <h2>16. Extending the System</h2>
+                <p>How to add a new feature (e.g., a "Delete All Quizzes" button):</p>
+                <ol>
+                    <li><strong>Backend API (<span class="inline-code">main.py</span>):</strong> Add the route.
+                        <pre>
+@app.delete("/api/courses/{course_id}/quizzes")
+async def delete_all_quizzes(course_id: str):
+    database.delete_course_quizzes(course_id)
+    return {"status": "success"}</pre>
+                    </li>
+                    <li><strong>Database Layer (<span class="inline-code">database.py</span>):</strong> Implement the logic using <span class="inline-code">pathlib</span>.
+                        <pre>
+def delete_course_quizzes(course_id):
+    course_dir = COURSES_DIR / course_id
+    # Logic to delete quiz_* folders via shutil.rmtree
+    return True</pre>
+                    </li>
+                    <li><strong>Frontend Interface (<span class="inline-code">index.html</span>):</strong> Add the button.
+                        <pre>&lt;button onclick="deleteAllQuizzes()"&gt;Delete All&lt;/button&gt;</pre>
+                    </li>
+                    <li><strong>Frontend Logic (<span class="inline-code">index.html</span> script):</strong> Implement the fetch call.
+                        <pre>
+async function deleteAllQuizzes() {
+    await fetch(`/api/courses/${currentCourseId}/quizzes`, { method: 'DELETE' });
+    location.reload(); // Refresh the UI
+}</pre>
+                    </li>
+                </ol>
+            </section>
+
+        </main>
+    </div>
+
+</body>
+</html>
