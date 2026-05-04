@@ -1393,7 +1393,8 @@ Format de sortie : Markdown. Soyez encourageant but précis.`;
                 students.forEach(s => {
                     const opt = document.createElement('option');
                     opt.value = s.id;
-                    opt.innerText = `${s.name} (${s.id})`;
+                    const dispName = `${(s.last_name || '')} ${(s.first_name || '')}`.trim() || `Étudiant`;
+                    opt.innerText = `${dispName} (${s.id})`;
                     select.appendChild(opt);
                 });
             } catch (e) {

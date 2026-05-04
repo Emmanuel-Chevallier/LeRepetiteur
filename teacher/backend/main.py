@@ -40,8 +40,8 @@ async def read_root():
 async def startup_event():
     # Create Default Teacher/Students if empty
     if not db.get_all_students():
-        db.save_student({"id": "student_1", "name": "Alice Student", "role": "student"})
-        db.save_student({"id": "student_2", "name": "Bob Student", "role": "student"})
+        db.save_student({"id": "student_1", "first_name": "Alice", "last_name": "Student", "role": "student"})
+        db.save_student({"id": "student_2", "first_name": "Bob", "last_name": "Student", "role": "student"})
 
 # --- API Endpoints ---
 @app.get("/api/students")
@@ -123,7 +123,6 @@ async def add_student(payload: dict):
     
     student = {
         "id": sid,
-        "name": f"Candidate #{sid}", # Internal name is "Candidate #1234"
         "role": "student"
     }
     db.save_student(student)
@@ -138,7 +137,6 @@ def _get_next_student_id():
 class EditStudentRequest(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    name: Optional[str] = None
     email: Optional[str] = None
 
 @app.patch("/api/students/{student_id}")
@@ -152,8 +150,6 @@ async def edit_student(student_id: str, payload: EditStudentRequest):
         student["first_name"] = payload.first_name
     if payload.last_name is not None:
         student["last_name"] = payload.last_name
-    if payload.name is not None:
-        student["name"] = payload.name
     if payload.email is not None:
         student["email"] = payload.email
     elif "email" in (payload.__fields_set__ if hasattr(payload, '__fields_set__') else set()):
@@ -257,7 +253,6 @@ async def import_students_csv(file: UploadFile = File(...)):
         
         student = {
             "id": sid,
-            "name": f"Candidate #{sid}",
             "first_name": first_name,
             "last_name": last_name,
             "role": "student",
@@ -296,7 +291,6 @@ async def add_students_batch(payload: dict):
             
         student = {
             "id": sid,
-            "name": f"Candidate #{sid}",
             "role": "student"
         }
         db.save_student(student)

@@ -308,7 +308,7 @@ def grade_submission_smart(scan_path: Path, custom_prompt: str = None, include_c
         print(f"Failed to update student history: {e}")
         
     return {
-        "student": student["name"],
+        "student": f"{student.get('last_name', '')} {student.get('first_name', '')}".strip() or student_id,
         "course": course["title"],
         "raw_course_id": course["id"],
         "quiz": quiz_num,

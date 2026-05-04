@@ -132,7 +132,8 @@ def get_grade_matrix(course_id: str):
     all_students_db = {s["id"]: s for s in db.get_all_students()}
     
     for sid, data in records.items():
-        s_name = all_students_db.get(sid, {}).get("name", sid)
+        student_obj = all_students_db.get(sid, {})
+        s_name = f"{student_obj.get('last_name', '')} {student_obj.get('first_name', '')}".strip() or sid
         row = {
             "student_id": sid,
             "student_name": s_name,

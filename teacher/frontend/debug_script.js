@@ -636,7 +636,7 @@ async function loadStudentsGlobal() {
 
             tr.innerHTML = `
                         <td style="padding:8px; border:1px solid #e5e7eb; text-align:center;">${s.id}</td>
-                        <td style="padding:8px; border:1px solid #e5e7eb; text-align:center;">${s.name}</td>
+                        <td style="padding:8px; border:1px solid #e5e7eb; text-align:center;">${((s.last_name || '') + ' ' + (s.first_name || '')).trim() || s.id}</td>
                         <td style="padding:8px; border:1px solid #e5e7eb; text-align:center;">${passDisplay}</td>
                         <td style="padding:8px; border:1px solid #e5e7eb; text-align:center;">
                             <button type="button" class="delete-student-btn" data-sid="${s.id}" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Supprimer</button>

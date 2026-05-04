@@ -305,7 +305,7 @@ Historique de l'étudiant :
         "id": f"{course['id']}_{quiz_number}_{student['id']}",
         "course_id": course["id"],
         "student_id": student["id"],
-        "student_name": student["name"],
+        "student_name": f"{student.get('last_name', '')} {student.get('first_name', '')}".strip() or student["id"],
         "quiz_number": quiz_number,
         "latex_content": latex_body,
         "pdf_path": str(pdf_path) if pdf_path else None,

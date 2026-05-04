@@ -44,7 +44,7 @@ async def login(payload: dict):
     if student.get("password") != pwd:
          raise HTTPException(status_code=401, detail="Invalid Password")
          
-    return {"message": "Login successful", "student": {"id": student["id"], "name": student["name"]}}
+    return {"message": "Login successful", "student": {"id": student["id"], "first_name": student.get("first_name", ""), "last_name": student.get("last_name", "")}}
 
 # --- API Endpoints ---
 @app.get("/api/students")
@@ -76,7 +76,6 @@ async def add_student(payload: dict):
     
     student = {
         "id": sid,
-        "name": f"Candidate #{sid}", # Internal name is "Candidate #1234"
         "role": "student"
     }
     db.save_student(student)

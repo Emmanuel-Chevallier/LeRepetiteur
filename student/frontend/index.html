@@ -264,9 +264,8 @@
             document.getElementById('loginView').style.display = 'none';
             document.getElementById('dashboardView').style.display = 'block';
 
-            // Clean up name (remove "Candidate #")
-            let displayName = currentUser.name;
-            if (displayName.startsWith("Candidate #")) displayName = "Étudiant " + currentUser.id;
+            // Clean up name
+            let displayName = `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || ("Étudiant " + currentUser.id);
 
             document.getElementById('welcomeMsg').innerText = `Bonjour !`;
             document.getElementById('userNameDisplay').innerText = `👤 ${displayName}`;
