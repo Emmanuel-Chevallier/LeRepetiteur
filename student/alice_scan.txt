@@ -1,8 +1,0 @@
-
-    App Header
-    Student: Alice Student
-    Course: Batch Test Course
-    Quiz #1
-    
-    My Answer: I understand everything about Concept 1.
-    

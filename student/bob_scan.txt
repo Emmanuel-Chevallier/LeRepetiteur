@@ -1,8 +1,0 @@
-
-    App Header
-    Student: Bob Student
-    Course: Batch Test Course
-    Quiz #1
-    
-    My Answer: I am confused about Concept 1.
-    
