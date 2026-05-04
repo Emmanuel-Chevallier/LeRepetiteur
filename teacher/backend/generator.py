@@ -94,7 +94,8 @@ def generate_quizzes_for_course(
     total_students = len(target_students)
     for i, student in enumerate(target_students):
         # Yield Progress
-        yield {"type": "progress", "current": i + 1, "total": total_students, "message": f"Generating for {student['name']}..."}
+        s_name = f"{student.get('last_name', '')} {student.get('first_name', '')}".strip() or student["id"]
+        yield {"type": "progress", "current": i + 1, "total": total_students, "message": f"Generating for {s_name}..."}
         
         # Cleanup existing quiz data before regeneration
         if regenerate:
@@ -497,11 +498,12 @@ def generate_quiz_for_student(
             })
     
     # 5. Cleanup existing data
-    yield {"type": "progress", "current": 0, "total": 1, "message": f"Cleaning up old data for {student['name']}..."}
+    student_name = f"{student.get('last_name', '')} {student.get('first_name', '')}".strip() or student["id"]
+    yield {"type": "progress", "current": 0, "total": 1, "message": f"Cleaning up old data for {student_name}..."}
     cleanup_existing_quiz(student_id, course_id, quiz_number)
     
     # 6. Generate
-    yield {"type": "progress", "current": 1, "total": 1, "message": f"Generating Quiz #{quiz_number} for {student['name']}..."}
+    yield {"type": "progress", "current": 1, "total": 1, "message": f"Generating Quiz #{quiz_number} for {student_name}..."}
     quiz = generate_single_quiz(student, course, content_context, quiz_number, specific_instructions, selected_questions, n_new, n_old)
     
     # 7. Recompile global PDF
